@@ -19,35 +19,47 @@
             color: white;
         }
 
-        /* Tabs Style */
+        /* Redesigned Tabs Style */
         .tabs {
             display: flex;
-            border-bottom: 1px solid #ccc;
-            background-color: #f1f1f1;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px;
+            background-color: #e0e0e0;
+            border-bottom: 2px solid #bbb;
             transition: background-color 0.5s;
             position: sticky;
             top: 0;
             z-index: 1000;
         }
         .tabs.dark-mode {
-            background-color: #1c1c1c;
+            background-color: #2b2b2b;
         }
         .tab {
-            flex: 1;
-            padding: 12px 20px;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
             cursor: pointer;
-            transition: background-color 0.5s;
             color: #333;
-        }
-        .tab.active, .tab:hover {
             background-color: #d0d0d0;
+            border-radius: 20px;
+            transition: background-color 0.3s, color 0.3s;
+            font-weight: bold;
+            text-align: center;
+        }
+        .tab.active {
+            background-color: #66bb6a;
+            color: white;
         }
         .tab.dark-mode {
             color: #ddd;
         }
         .tab.dark-mode.active {
-            background-color: #333;
+            background-color: #449955;
+        }
+        .tab:hover {
+            background-color: #b0b0b0;
         }
 
         /* Content Container */
@@ -69,7 +81,7 @@
 
         /* Title Section with Background Image */
         .title-section {
-            background-image: url('https://i.pinimg.com/originals/ba/88/4e/ba884ef60429d520097ae9e372d3bc07.jpg');
+            background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTDsou-9Yj0s2NTQ1pGx4zvMQj12BW1NUvgLA&s');
             background-size: cover;
             background-position: center;
             color: white;
@@ -120,80 +132,35 @@
             margin: 0 auto;
         }
 
-        /* Custom Toggle */
-        .toggle {
-            position: relative;
-            width: 50px;
-            height: 24px;
+        /* Fancy Button */
+        .fancy-button {
             display: inline-block;
-        }
-        .toggle input {
-            display: none;
-        }
-        .slider {
-            position: absolute;
+            padding: 10px 20px;
+            margin-top: 15px;
+            color: white;
+            background-color: #4caf50;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
             cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: 0.4s;
-            border-radius: 24px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            text-align: center;
         }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: 0.4s;
-            border-radius: 50%;
-        }
-        input:checked + .slider {
-            background-color: #66bb6a;
-        }
-        input:checked + .slider:before {
-            transform: translateX(26px);
+        .fancy-button:hover {
+            background-color: #388e3c;
         }
 
-        /* Custom Slider */
-        .slider-container {
-            margin-top: 15px;
-        }
-        .slider-container label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        .range-slider {
-            width: 100%;
-            appearance: none;
-            background: #ddd;
-            height: 6px;
-            border-radius: 5px;
-            outline: none;
-            transition: background 0.3s;
-        }
-        .range-slider::-webkit-slider-thumb {
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            background: #66bb6a;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
     </style>
 </head>
 <body>
 
     <!-- Tabs -->
     <div class="tabs">
-        <div class="tab active" onclick="openPage('home')">Home</div>
-        <div class="tab" onclick="openPage('insideOutAndRefugee')">Inside Out & Back Again and Refugee Paragraphs</div>
-        <div class="tab" onclick="openPage('settings')">Settings</div>
+        <div class="tab active" onclick="openPage(event, 'home')">Home</div>
+        <div class="tab" onclick="openPage(event, 'insideOutAndRefugee')">Inside Out & Back Again and Refugee Paragraphs</div>
+        <div class="tab" onclick="openPage(event, 'settings')">Settings</div>
     </div>
 
     <!-- Content -->
@@ -229,28 +196,27 @@
             <h2>Settings</h2>
             <div class="settings-container">
                 <label>Dark Mode</label>
-                <div class="toggle">
-                    <input type="checkbox" id="darkModeToggle" onclick="toggleDarkMode()">
-                    <span class="slider"></span>
-                </div>
+                <input type="checkbox" id="darkModeToggle" onclick="toggleDarkMode()">
+
                 <div class="slider-container">
                     <label for="fontSizeSlider">Text Size</label>
                     <input type="range" id="fontSizeSlider" min="1" max="2" step="0.1" value="1" class="range-slider" oninput="adjustTextSize(this.value)">
                 </div>
+
+                <a href="/breadsite/" class="fancy-button">Go to the Breadsite</a>
             </div>
         </div>
     </div>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // Load dark mode and text size from local storage
             if (localStorage.getItem("darkMode") === "enabled") toggleDarkMode();
             const fontSize = localStorage.getItem("fontSize") || 1;
             document.getElementById("fontSizeSlider").value = fontSize;
             adjustTextSize(fontSize);
         });
 
-        function openPage(pageId) {
+        function openPage(event, pageId) {
             const pages = document.querySelectorAll('.page');
             const tabs = document.querySelectorAll('.tab');
             
@@ -258,7 +224,7 @@
             tabs.forEach(tab => tab.classList.remove('active'));
 
             document.getElementById(pageId).classList.add('active');
-            event.target.classList.add('active');
+            event.currentTarget.classList.add('active');
         }
 
         function toggleDarkMode() {
