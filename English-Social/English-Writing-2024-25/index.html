@@ -15,10 +15,46 @@
             transition: background-color 0.5s, color 0.5s;
             font-size: 16px;
             color: black;
+            overflow: hidden; /* Prevent scrolling during loading */
         }
         body.dark-mode {
             background-color: #121212;
             color: white;
+        }
+
+        /* Loading Screen Styles */
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+        }
+        .loading-animation {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3498db;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #versionInfo {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #333;
+            text-align: center;
         }
 
         /* Redesigned Tabs Style */
@@ -168,9 +204,23 @@
             background-color: #388e3c;
         }
 
+        /* Warning Note */
+        .warning-note {
+            color: red;
+            font-size: 1.5em; /* Larger font for emphasis */
+            text-align: center;
+            margin: 20px 0;
+        }
+
     </style>
 </head>
 <body>
+
+    <!-- Loading Screen -->
+    <div id="loadingScreen">
+        <div class="loading-animation"></div>
+        <div id="versionInfo">Dabicco Engine Ver 8.1<br>Website Ver 0.0.7b</div>
+    </div>
 
     <!-- Tabs -->
     <div class="tabs">
@@ -197,22 +247,21 @@
                 <iframe src="https://docs.google.com/document/d/1vCl-PloZVrL4Fx3iMe76J0rq9l_lfhbCxl40U8ULXEY/preview?usp=embed_googleplus" style="top: 0; left: 0; width: 100%; height: 100%; position: absolute; border: 0;" allowfullscreen></iframe>
             </div>
         </div>
-        
-        <div id="insideOutAndRefugee" class="page">
-            <div class="refugee-title">
-                Inside Out & Back Again and Refugee Paragraphs
-            </div>
-            <div class="refugee-content">
-                <img src="https://m.media-amazon.com/images/I/51ACoi1n+0L._AC_UF894,1000_QL80_.jpg" alt="Refugee Image">
-                <p class="refugee-text">In this assignment to write the paragraphs on the effects of war in <em>Inside Out & Back Again</em> by Thanhha Lai and the brave actions of the main characters in <em>Refugee</em> by Alan Gratz, I learned about (enjoyed) the profound ways that conflict and hardship shape the resilience and character of young people like Ha, Isabel, Mahmoud, and Josef. For my writing skills, I was able to (learned how to) easily make grammatical corrections, however, I must still control my overusage of commas.</p>
-            </div>
 
-            <div style="left: 0; width: 100%; height: 0; position: relative; padding-bottom: 129.4118%;">
-                <iframe src="https://docs.google.com/document/d/1PDtlL5TLn7mMEl3i0woj0kMDeb_vcNL2loM1M4gU-6M/preview?usp=embed_googleplus" style="top: 0; left: 0; width: 100%; height: 100%; position: absolute; border: 0;" allowfullscreen></iframe>
+        <div id="insideOutAndRefugee" class="page">
+            <h2>Effects of War and Brave Actions</h2>
+            <p>In this assignment to write the paragraphs on the effects of war in Inside Out & Back Again by Thanhha Lai and the brave actions of the main characters in Refugee by Alan Gratz, I learned about the profound ways that conflict and hardship shape the resilience and character of young people like Ha, Isabel, Mahmoud, and Josef. For my writing skills, I was able to learn how to easily make grammatical corrections; however, I must still control my overusage of commas.</p>
+            <h3>Refugee Characters</h3>
+            <div class="refugee-content">
+                <img src="https://images.unsplash.com/photo-1615526114659-1d47c91e1677" alt="Refugees">
+                <div class="refugee-text">
+                    <p>Isabel and her family embark on a perilous journey across the sea in search of safety, demonstrating immense courage and determination. Mahmoud and his family face insurmountable obstacles as they flee their war-torn homeland, while Josef's story reveals the historical struggles of refugees in the past. Each character exemplifies bravery in the face of adversity.</p>
+                </div>
             </div>
         </div>
 
         <div id="comments" class="page">
+            <div class="warning-note">⚠️ **WARNING**: This comment section is currently not in use for testing purposes. Please do not use it for now! ⚠️</div>
             <script defer src="https://cdn.commento.io/js/commento.js"></script>
             <div id="commento"></div>
         </div>
@@ -226,12 +275,22 @@
                     <label for="fontSizeSlider">Font Size:</label>
                     <input type="range" id="fontSizeSlider" min="0.8" max="2" step="0.1" value="1" onchange="adjustTextSize(this.value)">
                 </div>
-                <button class="fancy-button" onclick="window.location.href='/breadsite/'">Go to the Breadsite</button>
+                <button class="fancy-button" onclick="confirmRedirect()">Go to the Breadsite</button>
             </div>
         </div>
     </div>
 
     <script>
+        // Loading Screen Logic
+        window.onload = function() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            loadingScreen.style.opacity = '0'; // Fade out loading screen
+            setTimeout(() => {
+                loadingScreen.style.display = 'none'; // Hide it after fade out
+                document.body.style.overflow = 'auto'; // Enable scrolling after loading
+            }, 500); // Match the timeout with the CSS transition duration
+        };
+
         // Dark Mode Toggle
         document.addEventListener("DOMContentLoaded", () => {
             const darkMode = localStorage.getItem("darkMode");
@@ -263,6 +322,13 @@
         function adjustTextSize(scale) {
             document.body.style.fontSize = `${scale}em`;
             localStorage.setItem("fontSize", scale);
+        }
+
+        function confirmRedirect() {
+            const confirmation = confirm("This is not related to my English/Social Studies project and should be ignored. However, you may enter it and see my other work with my friends. Do you want to proceed to the Breadsite?");
+            if (confirmation) {
+                window.location.href = '/breadsite/';
+            }
         }
     </script>
 
