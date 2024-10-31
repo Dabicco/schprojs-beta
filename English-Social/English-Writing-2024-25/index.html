@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,7 @@
     <style>
         /* General Styles */
         @import url('https://fonts.googleapis.com/css2?family=Bitter:wght@400;700&display=swap');
-        
+
         body {
             font-family: 'Bitter', serif;
             margin: 0;
@@ -16,6 +17,7 @@
             font-size: 16px;
             color: black;
         }
+
         body.dark-mode {
             background-color: #121212;
             color: white;
@@ -34,9 +36,11 @@
             top: 0;
             z-index: 1000;
         }
+
         .tabs.dark-mode {
             background-color: #2b2b2b;
         }
+
         .tab {
             display: flex;
             align-items: center;
@@ -50,16 +54,20 @@
             font-weight: bold;
             text-align: center;
         }
+
         .tab.active {
             background-color: #66bb6a;
             color: white;
         }
+
         .tab.dark-mode {
             color: #ddd;
         }
+
         .tab.dark-mode.active {
             background-color: #449955;
         }
+
         .tab:hover {
             background-color: #b0b0b0;
         }
@@ -69,6 +77,7 @@
             padding: 20px;
             transition: background-color 0.5s;
         }
+
         .content.dark-mode {
             background-color: rgba(18, 18, 18, 0.8);
         }
@@ -77,6 +86,7 @@
         .page {
             display: none;
         }
+
         .page.active {
             display: block;
         }
@@ -90,6 +100,7 @@
             padding: 40px 20px;
             text-align: center;
         }
+
         .title-section h1 {
             font-family: Arial, sans-serif;
             font-size: 3em;
@@ -108,25 +119,30 @@
             font-size: 2.5em;
             text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.7);
         }
+
         .refugee-content {
             display: flex;
             align-items: center;
             margin-top: 20px;
         }
+
         .refugee-content img {
             max-width: 400px;
             width: 100%;
             margin-right: 20px;
             border-radius: 8px;
         }
+
         .refugee-text {
-            font-size: 1.1em; /* Slightly larger font for the paragraph */
+            font-size: 1.1em;
+            /* Slightly larger font for the paragraph */
         }
 
         /* Settings Styles */
         .settings-page {
             text-align: center;
         }
+
         .settings-container {
             display: inline-block;
             text-align: left;
@@ -154,18 +170,20 @@
             transition: background-color 0.3s;
             text-align: center;
         }
+
         .fancy-button:hover {
             background-color: #388e3c;
         }
-
     </style>
 </head>
+
 <body>
 
     <!-- Tabs -->
     <div class="tabs">
         <div class="tab active" onclick="openPage(event, 'home')">Home</div>
-        <div class="tab" onclick="openPage(event, 'insideOutAndRefugee')">Inside Out & Back Again and Refugee Paragraphs</div>
+        <div class="tab" onclick="openPage(event, 'insideOutAndRefugee')">Inside Out & Back Again and Refugee Paragraphs
+        </div>
         <div class="tab" onclick="openPage(event, 'settings')">Settings</div>
     </div>
 
@@ -176,25 +194,34 @@
                 <h1>Dabyfish Beta</h1>
             </div>
             <h2>Nico Bellantoni's 8th Grade Writing</h2>
-            <p>Welcome to my portfolio! Here you will find my writing from 8th grade English and social studies. This year I have three writing goals:</p>
+            <p>Welcome to my portfolio! Here you will find my writing from 8th grade English and social studies. This
+                year I have three writing goals:</p>
             <ol>
                 <li>Less commas (less comma-related grammar errors)</li>
                 <li>Make fewer silly grammatical errors while writing faster</li>
                 <li>Pursue English more seriously</li>
             </ol>
         </div>
-        
+
         <div id="insideOutAndRefugee" class="page">
             <div class="refugee-title">
                 Inside Out & Back Again and Refugee Paragraphs
             </div>
             <div class="refugee-content">
                 <img src="https://m.media-amazon.com/images/I/51ACoi1n+0L._AC_UF894,1000_QL80_.jpg" alt="Refugee Image">
-                <p class="refugee-text">In this assignment to write the paragraphs on the effects of war in <em>Inside Out & Back Again</em> by Thanhha Lai and the brave actions of the main characters in <em>Refugee</em> by Alan Gratz, I learned about (enjoyed) the profound ways that conflict and hardship shape the resilience and character of young people like Ha, Isabel, Mahmoud, and Josef. For my writing skills, I was able to (learned how to) easily make grammatical corrections, however, I must still control my overusage of commas.</p>
+                <p class="refugee-text">In this assignment to write the paragraphs on the effects of war in <em>Inside
+                        Out & Back Again</em> by Thanhha Lai and the brave actions of the main characters in
+                    <em>Refugee</em> by Alan Gratz, I learned about (enjoyed) the profound ways that conflict and
+                    hardship shape the resilience and character of young people like Ha, Isabel, Mahmoud, and Josef. For
+                    my writing skills, I was able to (learned how to) easily make grammatical corrections, however, I
+                    must still control my overusage of commas.</p>
             </div>
 
             <div style="left: 0; width: 100%; height: 0; position: relative; padding-bottom: 129.4118%;">
-                <iframe src="https://docs.google.com/document/d/1PDtlL5TLn7mMEl3i0woj0kP8UrYT4xSLOJ1MdiWFD2Q/preview?usp=embed_googleplus" style="top: 0; left: 0; width: 100%; height: 100%; position: absolute; border: 0;" allowfullscreen></iframe>
+                <iframe
+                    src="https://docs.google.com/document/d/1PDtlL5TLn7mMEl3i0woj0kP8UrYT4xSLOJ1MdiWFD2Q/preview?usp=embed_googleplus"
+                    style="top: 0; left: 0; width: 100%; height: 100%; position: absolute; border: 0;"
+                    allowfullscreen></iframe>
             </div>
         </div>
 
@@ -206,7 +233,8 @@
 
                 <div class="slider-container">
                     <label for="fontSizeSlider">Text Size</label>
-                    <input type="range" id="fontSizeSlider" min="1" max="2" step="0.1" value="1" class="range-slider" oninput="adjustTextSize(this.value)">
+                    <input type="range" id="fontSizeSlider" min="1" max="2" step="0.1" value="1" class="range-slider"
+                        oninput="adjustTextSize(this.value)">
                 </div>
 
                 <a href="/breadsite/" class="fancy-button">Go to the Breadsite</a>
@@ -244,4 +272,5 @@
     </script>
 
 </body>
+
 </html>
