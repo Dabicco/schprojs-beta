@@ -191,6 +191,20 @@
             margin-right: 20px; /* Add space between the image and the embed */
         }
 
+        /* Paint Styles */
+        .paint-container {
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #000;
+            cursor: crosshair;
+            margin-top: 10px;
+        }
+        .slider {
+            margin: 10px 0;
+            width: 100%;
+        }
+
     </style>
 </head>
 <body>
@@ -201,6 +215,7 @@
         <div class="tab" onclick="openPage(event, 'insideOutAndRefugee')">Inside Out & Back Again and Refugee Paragraphs</div>
         <div class="tab" onclick="openPage(event, 'comments')">Comments</div>
         <div class="tab" onclick="openPage(event, 'extras')">Extras</div>
+        <div class="tab" onclick="openPage(event, 'funPaint')">Fun Paint</div>
     </div>
 
     <!-- Content -->
@@ -262,6 +277,18 @@
                 <a href="https://docs.google.com/document/d/1PDtlL5TLn7mMEl3i0woj0kP8UrYT4xSLOJ1MdiWFD2Q" class="fancy-button">Inside Out & Back Again and Refugee Paragraphs Link</a>
             </div>
         </div>
+
+        <div id="funPaint" class="page paint-container">
+            <h2>Fun Paint</h2>
+            <canvas id="paintCanvas" width="800" height="600"></canvas>
+            <div>
+                <label for="thicknessSlider">Thickness:</label>
+                <input type="range" id="thicknessSlider" class="slider" min="1" max="20" value="5" onchange="updateThickness(this.value)">
+                <label for="colorPicker">Color:</label>
+                <input type="color" id="colorPicker" value="#000000" onchange="updateColor(this.value)">
+                <button onclick="resetCanvas()" class="fancy-button">Reset Canvas</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -304,6 +331,57 @@
                 window.location.href = '/breadsite/';
             }
         }
+
+        // Paint Functions
+        const canvas = document.getElementById("paintCanvas");
+        const ctx = canvas.getContext("2d");
+        let painting = false;
+        let brushColor = "#000000";
+        let brushThickness = 5;
+
+        function startPosition(e) {
+            painting = true;
+            draw(e);
+        }
+
+        function endPosition() {
+            painting = false;
+            ctx.beginPath();
+        }
+
+        function draw(e) {
+            if (!painting) return;
+
+            // Calculate mouse position relative to canvas
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            ctx.lineWidth = brushThickness;
+            ctx.lineCap = "round";
+            ctx.strokeStyle = brushColor;
+
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+        function updateThickness(thickness) {
+            brushThickness = thickness;
+        }
+
+        function updateColor(color) {
+            brushColor = color;
+        }
+
+        function resetCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        canvas.addEventListener("mousedown", startPosition);
+        canvas.addEventListener("mouseup", endPosition);
+        canvas.addEventListener("mousemove", draw);
     </script>
 
 </body>
