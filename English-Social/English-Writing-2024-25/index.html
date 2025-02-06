@@ -1,436 +1,599 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dabyfish Beta - Portfolio</title>
-    <link rel="icon" href="path/to/icon.ico">
-    <style>
-        /* General Styles */
-        @import url('https://fonts.googleapis.com/css2?family=Bitter:wght@400;700&display=swap');
-        
-        body {
-            font-family: 'Bitter', serif;
-            margin: 0;
-            padding: 0;
-            transition: background-color 0.5s, color 0.5s;
-            font-size: 16px;
-            color: black;
-        }
-        body.dark-mode {
-            background-color: #121212;
-            color: white;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dabyfish Beta - Portfolio</title>
+  <link rel="icon" href="path/to/icon.ico">
 
-        /* Redesigned Tabs Style */
-        .tabs {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            padding: 10px;
-            background-color: #e0e0e0;
-            border-bottom: 2px solid #bbb;
-            transition: background-color 0.5s;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-        .tabs.dark-mode {
-            background-color: #2b2b2b;
-        }
-        .tab {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px 20px;
-            cursor: pointer;
-            color: #333;
-            background-color: #d0d0d0;
-            border-radius: 20px;
-            transition: background-color 0.3s, color 0.3s;
-            font-weight: bold;
-            text-align: center;
-        }
-        .tab.active {
-            background-color: #66bb6a;
-            color: white;
-        }
-        .tab.dark-mode {
-            color: #ddd;
-        }
-        .tab.dark-mode.active {
-            background-color: #449955;
-        }
-        .tab:hover {
-            background-color: #b0b0b0;
-        }
+  <style>
+    /* Loading Screen Overlay with Spinner */
+    #loadingOverlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.75);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      font-size: 1.5em;
+    }
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 6px solid #ccc;
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 10px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
 
-        /* Content Container */
-        .content {
-            padding: 20px;
-            transition: background-color 0.5s;
-        }
-        .content.dark-mode {
-            background-color: rgba(18, 18, 18, 0.8);
-        }
+    /* General Styles */
+    @import url('https://fonts.googleapis.com/css2?family=Bitter:wght@400;700&display=swap');
 
-        /* Page Sections */
-        .page {
-            display: none;
-        }
-        .page.active {
-            display: block;
-        }
+    body {
+      font-family: 'Bitter', serif;
+      margin: 0;
+      padding: 0;
+      font-size: 1.2em;
+      color: black;
+      transition: background-color 0.5s, color 0.5s;
+    }
+    body.dark-mode {
+      background-color: #121212;
+      color: white;
+    }
 
-        /* Title Section with Background Image */
-        .title-section {
-            background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTDsou-9Yj0s2NTQ1pGx4zvMQj12BW1NUvgLA&s');
-            background-size: cover;
-            background-position: center;
-            color: white;
-            padding: 40px 20px;
-            text-align: center;
-        }
-        .title-section h1 {
-            font-family: Arial, sans-serif;
-            font-size: 3em;
-            margin: 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-        }
+    /* Navigation Bar */
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 5px;
+      padding: 5px;
+      background-color: #e0e0e0;
+      border-bottom: 2px solid #bbb;
+      transition: background-color 0.5s;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    .tabs.dark-mode {
+      background-color: #2b2b2b;
+    }
+    .tab {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 15px;
+      cursor: pointer;
+      color: #333;
+      background-color: #d0d0d0;
+      border-radius: 20px;
+      transition: background-color 0.3s, color 0.3s;
+      font-weight: bold;
+      text-align: center;
+    }
+    .tab.active {
+      background-color: #66bb6a;
+      color: white;
+    }
+    .tab.dark-mode {
+      color: #ddd;
+    }
+    .tab.dark-mode.active {
+      background-color: #449955;
+    }
+    .tab:hover {
+      background-color: #b0b0b0;
+    }
 
-        /* Background Images */
-        .home-background {
-            background-image: url('https://t4.ftcdn.net/jpg/06/85/25/43/360_F_685254370_CzvfePoIZQV78p49taS2hsaYtVW22X6v.jpg');
-            background-size: cover;
-            background-position: center;
-            padding: 20px;
-            border-radius: 10px;
-            color: black; /* EzChange Change white for images? */
-        }
+    /* Content Container */
+    .content {
+      padding: 20px;
+      transition: background-color 0.5s;
+    }
+    .content.dark-mode {
+      background-color: rgba(18, 18, 18, 0.8);
+    }
 
-        .refugee-background {
-            background-image: url('https://w0.peakpx.com/wallpaper/359/361/HD-wallpaper-dark-water-black-waves-night-mono.jpg');
-            background-size: cover;
-            background-position: center;
-            padding: 20px;
-            border-radius: 10px;
-            color: white; /* EzChange Change white for images? */
-        }
+    /* Page Sections */
+    .page {
+      display: none;
+    }
+    .page.active {
+      display: block;
+    }
 
-        .reconstruction-background {
-            background-image: url('https://media.istockphoto.com/id/1346168039/vector/vertical-vector-illustration-of-an-empty-pastel-or-pale-light-sky-blue-coloured-grunge.jpg?s=612x612&w=0&k=20&c=7u3RlpcTzFrHzTYmQqgreLeqrN_xgdgi_mFgj8k7tq8=');
-            background-size: cover;
-            background-position: center;
-            padding: 20px;
-            border-radius: 10px;
-            color: black; /* EzChange Change white for images? */
-        }
+    /* Title Banner style (matching Home) */
+    .title-section, .page-banner {
+      background-size: cover;
+      background-position: center;
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+      font-size: 2.5em;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+      margin-bottom: 20px;
+    }
 
-        /* All Content, Ignore Name */
-        .elem-title {
-            background-image: url('https://media.istockphoto.com/id/1300831009/photo/column-of-migrants-near-the-state-borders-fence-and-barbed-wire-surveillance-supervised.jpg?s=612x612&w=0&k=20&c=DIB_nJ4VAFFdBMXjDDYOkbcJzunge_NxoFvakju7W1o=');
-            background-size: cover;
-            background-position: center;
-            padding: 30px;
-            color: white;
-            text-align: center;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.7);
-        }
-        .elem-content {
-            display: flex;
-            align-items: center;
-            margin-top: 20px;
-        }
-        .elem-content img {
-            max-width: 400px;
-            width: 100%;
-            margin-right: 20px;
-            border-radius: 8px;
-        }
-        .elem-text {
-            font-size: 0.9em;
-        }
+    /* Home Page Title Section specifically */
+    .title-section {
+      background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTDsou-9Yj0s2NTQ1pGx4zvMQj12BW1NUvgLA&s');
+    }
 
-        /* Extras Styles */
-        .extras-page {
-            text-align: center;
-        }
-        .extras-container {
-            display: inline-block;
-            text-align: left;
-            background: #f5f5f5;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 300px;
-            margin: 0 auto;
-        }
+    /* Home Page Background */
+    .home-background {
+      background-image: url('https://t4.ftcdn.net/jpg/06/85/25/43/360_F_685254370_CzvfePoIZQV78p49taS2hsaYtVW22X6v.jpg');
+      background-size: cover;
+      background-position: center;
+      padding: 20px;
+      border-radius: 10px;
+      color: black;
+    }
 
-        /* Fancy Button */
-        .fancy-button {
-            display: inline-block;
-            padding: 10px 20px;
-            margin-top: 15px;
-            color: white;
-            background-color: #4caf50;
-            border: none;
-            border-radius: 8px;
-            font-size: 1em;
-            font-weight: bold;
-            cursor: pointer;
-            text-decoration: none;
-            transition: background-color 0.3s;
-            text-align: center;
-        }
-        .fancy-button:hover {
-            background-color: #388e3c;
-        }
+    /* Refugee Page Banner */
+    .refugee-banner {
+      background-image: url('https://media.istockphoto.com/id/1300831009/photo/column-of-migrants-near-the-state-borders-fence-and-barbed-wire-surveillance-supervised.jpg?s=612x612&w=0&k=20&c=DIB_nJ4VAFFdBMXjDDYOkbcJzunge_NxoFvakju7W1o=');
+    }
 
-        /* Warning Note Style */
-        .warning-note {
-            color: red;
-            font-size: 1.5em;
-            text-align: center;
-            margin: 20px 0;
-            font-weight: bold;
-        }
+    /* Reconstruction Banner */
+    .reconstruction-banner {
+      background-image: url('https://image.pbs.org/contentchannels/yclTIPD-show-mezzanine16x9-rznw9Cj.jpg');
+    }
 
-        /* Image Next to Embed */
-        .embed-container {
-            display: flex;
-            align-items: flex-start; /* Align items to the top */
-            justify-content: flex-start; /* Align items to the left */
-            margin-top: 20px;
-        }
-        .embed-container img {
-            max-width: 300px; /* Adjust width as needed */
-            border-radius: 8px;
-            height: 300px; /* Set height to maintain vertical alignment */
-            margin-right: 20px; /* Add space between the image and the embed */
-        }
+    /* Text to Text Connections Banner */
+    .txt2txt-banner {
+      background-image: url('https://cdnuploads.aa.com.tr/uploads/Contents/2017/01/14/thumbs_b_c_731a2e8256825e9cbc1a19566d656453.jpg?v=223033');
+    }
 
-        /* Paint Styles */
-        .paint-container {
-            text-align: center;
-        }
-        canvas {
-            border: 1px solid #000;
-            cursor: crosshair;
-            margin-top: 10px;
-        }
-        .slider {
-            margin: 10px 0;
-            width: 100%;
-        }
+    /* Title Analysis Banner */
+    .titleAnalysis-banner {
+      background-image: url('https://cdn.storyboardthat.com/site-images/ela/inside-out-and-back-again.png');
+    }
 
-    </style>
+    /* Additional Page Backgrounds */
+    .refugee-background {
+      background-image: url('https://w0.peakpx.com/wallpaper/359/361/HD-wallpaper-dark-water-black-waves-night-mono.jpg');
+      background-size: cover;
+      background-position: center;
+      padding: 20px;
+      border-radius: 10px;
+      color: white;
+    }
+    /* Reconstruction background changed to orange gradient */
+    .reconstruction-background {
+      background: linear-gradient(orange, #f5b041);
+      padding: 20px;
+      border-radius: 10px;
+      color: black;
+    }
+    .txt2txt-background {
+      background: linear-gradient(to bottom right, #ccc, #eee);
+      padding: 20px;
+      border-radius: 10px;
+      color: black;
+    }
+    .titleAnalysis-background {
+      background-image: url('https://images.pexels.com/photos/235986/pexels-photo-235986.jpeg');
+      background-size: cover;
+      background-position: center;
+      padding: 20px;
+      border-radius: 10px;
+      color: white !important;
+    }
+
+    /* Embedded Elements & Layout */
+    .embed-container {
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+      margin-top: 20px;
+    }
+
+    /* For side-by-side layout on the home page specifically */
+    .home-content {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .home-content img {
+      /* Rounded edges */
+      border-radius: 12px;
+      max-width: 300px;
+      width: 100%;
+    }
+    .home-embed {
+      /* Container for the doc embed so it stays side by side with the image */
+      flex-grow: 1;
+    }
+
+    /* Generic Content Styles */
+    .elem-content {
+      display: flex;
+      align-items: center;
+      margin-top: 20px;
+    }
+    .elem-content img {
+      max-width: 400px;
+      width: 100%;
+      margin-right: 20px;
+      border-radius: 8px;
+    }
+    .elem-text {
+      font-size: 0.9em;
+    }
+
+    /* Title Analysis smaller side image */
+    .titleAnalysis-img {
+      max-width: 220px; /* Resized so it’s smaller */
+      width: 100%;
+      margin-right: 20px;
+      border-radius: 8px;
+    }
+
+    /* Extras Page Styles */
+    .extras-page {
+      text-align: center;
+    }
+    .extras-container {
+      display: inline-block;
+      text-align: left;
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      max-width: 300px;
+      margin: 0 auto;
+    }
+    body.dark-mode .extras-container {
+      background-color: #333;
+      color: #fff;
+    }
+
+    /* Fancy Button */
+    .fancy-button {
+      display: inline-block;
+      padding: 10px 20px;
+      margin-top: 15px;
+      color: white;
+      background-color: #4caf50;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.3s;
+      text-align: center;
+    }
+    .fancy-button:hover {
+      background-color: #388e3c;
+    }
+
+    /* Paint */
+    .paint-container {
+      text-align: center;
+    }
+    canvas {
+      border: 1px solid #000;
+      cursor: crosshair;
+      margin-top: 10px;
+    }
+    .slider {
+      margin: 10px 0;
+      width: 100%;
+    }
+
+  </style>
 </head>
 <body>
 
-    <!-- Tabs -->
-    <div class="tabs">
-        <div class="tab active" onclick="openPage(event, 'home')">Home</div>
-        <div class="tab" onclick="openPage(event, 'insideOutAndRefugee')">Inside Out & Back Again and Refugee Paragraphs</div>
-        <div class="tab" onclick="openPage(event, 'reconstruction')">Reconstruction Paragraph Response</div>
-        <div class="tab" onclick="openPage(event, 'txt2txt')">Text to Text Connections Mini Essay</div>
-        <div class="tab" onclick="openPage(event, 'extras')">Extras</div>
-        <div class="tab" onclick="openPage(event, 'funPaint')">Fun Paint</div>
+  <!-- Loading Overlay (with spinner) -->
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    Loading...
+  </div>
+
+  <!-- Tabs (Navigation) -->
+  <div class="tabs" role="navigation">
+    <div class="tab active" onclick="openPage(event, 'home')">Home</div>
+    <div class="tab" onclick="openPage(event, 'insideOutAndRefugee')">Inside Out & Back Again and Refugee Paragraphs</div>
+    <div class="tab" onclick="openPage(event, 'reconstruction')">Reconstruction Paragraph Response</div>
+    <div class="tab" onclick="openPage(event, 'txt2txt')">Text to Text Connections Mini Essay</div>
+    <div class="tab" onclick="openPage(event, 'titleAnalysis')">Title Analysis Essay</div>
+    <div class="tab" onclick="openPage(event, 'extras')">Extras</div>
+    <div class="tab" onclick="openPage(event, 'funPaint')">Fun Paint</div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+    <!-- Home Page -->
+    <div id="home" class="page home-background active">
+      <div class="title-section">
+        <h1>Dabyfish Beta</h1>
+      </div>
+      <h2>Nico Bellantoni's 8th Grade Writing</h2>
+      <p>Welcome to my portfolio! Here you will find my writing from 8th grade English and social studies. This year I have three writing goals:</p>
+      <ol>
+        <li>I aim to use fewer commas to reduce comma-related grammar errors.</li>
+        <li>I plan to make fewer silly grammatical errors while writing more quickly.</li>
+        <li>I want to pursue English more seriously as I aspire to be an English teacher.</li>
+      </ol>
+
+      <!-- Side by side layout for home page -->
+      <div class="home-content">
+        <img src="https://img.freepik.com/premium-photo/vibrant-tech-hardware-neon-tones-showcasing-modern-computer-motherboard-ideal-technology-themes-ai_372197-32783.jpg"
+             alt="Tech Hardware">
+        <div class="home-embed">
+          <div style="left: 0; width: 100%; height: 0; position: relative; padding-bottom: 129.4118%;">
+            <iframe src="https://docs.google.com/document/d/1vCl-PloZVrL4Fx3iMe76J0rq9l_lfhbCxl40U8ULXEY/preview?usp=embed_googleplus"
+                    style="top: 0; left: 0; width: 100%; height: 100%; position: absolute; border: 0;"
+                    allowfullscreen></iframe>
+          </div>
+        </div>
+      </div>
+      <a href="https://docs.google.com/document/d/1vCl-PloZVrL4Fx3iMe76J0rq9l_lfhbCxl40U8ULXEY" class="fancy-button">BioPoem Link</a>
     </div>
 
-    <!-- Content -->
-    <div class="content">
-        <div id="home" class="page home-background">
-            <div class="title-section">
-                <h1>Dabyfish Beta</h1>
-            </div>
-            <h2>Nico Bellantoni's 8th Grade Writing</h2>
-            <p>Welcome to my portfolio! Here you will find my writing from 8th grade English and social studies. This year I have three writing goals:</p>
-            <ol>
-                <li>I aim to use fewer commas to reduce comma-related grammar errors.</li>
-                <li>I plan to make fewer silly grammatical errors while writing more quickly.</li>
-                <li>I want to pursue English more seriously as I aspire to be an English teacher.</li>
-            </ol>
-            <div class="embed-container">
-                <img src="https://img.freepik.com/premium-photo/vibrant-tech-hardware-neon-tones-showcasing-modern-computer-motherboard-ideal-technology-themes-ai_372197-32783.jpg" alt="Tech Hardware">
-                <div style="left: 0; width: 100%; height: 0; position: relative; padding-bottom: 129.4118%;">
-                    <iframe src="https://docs.google.com/document/d/1vCl-PloZVrL4Fx3iMe76J0rq9l_lfhbCxl40U8ULXEY/preview?usp=embed_googleplus" style="top: 0; left: 0; width: 100%; height: 100%; position: absolute; border: 0;" allowfullscreen></iframe>
-                </div>
-            </div>
-            <a href="https://docs.google.com/document/d/1vCl-PloZVrL4Fx3iMe76J0rq9l_lfhbCxl40U8ULXEY" class="fancy-button">BioPoem Link</a>
+    <!-- Inside Out & Back Again and Refugee Paragraphs Page -->
+    <div id="insideOutAndRefugee" class="page refugee-background">
+      <!-- Banner (matching home size) -->
+      <div class="page-banner refugee-banner">
+        Inside Out & Back Again and Refugee Paragraphs
+      </div>
+      <div class="elem-content">
+        <img src="https://niemanreports.org/app/uploads/2024/03/MSF332352High-scaled-1.jpg" alt="Refugee Image">
+        <div class="elem-text">
+          <p>In this assignment to write the paragraphs on the effects of war in Inside Out & Back Again by Thanhha Lai and the brave actions of the main characters in Refugee by Alan Gratz, I learned about the profound ways that conflict and hardship shape the resilience and character of young people like Ha, Isabel, Mahmoud, and Josef. I also realized how important it is to care about others and their struggles, especially when they face tough times. For my writing skills, I was able to easily make grammatical corrections; however, I must still control my overusage of commas. I also learned the importance of empathy and understanding different perspectives.</p>
         </div>
-
-        <div id="insideOutAndRefugee" class="page refugee-background">
-            <div class="elem-title">Refugee</div>
-            <div class="elem-content">
-                <img src="https://niemanreports.org/app/uploads/2024/03/MSF332352High-scaled-1.jpg" alt="Refugee Image">
-                <div class="elem-text">
-                    <p>In this assignment to write the paragraphs on the effects of war in Inside Out & Back Again by Thanhha Lai and the brave actions of the main characters in Refugee by Alan Gratz, I learned about the profound ways that conflict and hardship shape the resilience and character of young people like Ha, Isabel, Mahmoud, and Josef. I also realized how important it is to care about others and their struggles, especially when they face tough times. For my writing skills, I was able to easily make grammatical corrections; however, I must still control my overusage of commas. I also learned the importance of empathy and understanding different perspectives.</p>
-                </div>
-            </div>
-            <div class="embed-container">
-                <div style="left: 0; width: 100%; height: 0; position: relative; padding-bottom: 129.4118%;">
-                    <iframe src="https://docs.google.com/document/d/1PDtlL5TLn7mMEl3i0woj0kP8UrYT4xSLOJ1MdiWFD2Q/preview?usp=embed_googleplus" style="top: 0; left: 0; width: 100%; height: 100%; position: absolute; border: 0;" allowfullscreen></iframe>
-                </div>
-            </div>
-            <a href="https://docs.google.com/document/d/1PDtlL5TLn7mMEl3i0woj0kP8UrYT4xSLOJ1MdiWFD2Q" class="fancy-button">Inside Out & Back Again and Refugee Paragraphs Link</a>
+      </div>
+      <div class="embed-container">
+        <div style="left: 0; width: 100%; height: 0; position: relative; padding-bottom: 129.4118%;">
+          <iframe src="https://docs.google.com/document/d/1PDtlL5TLn7mMEl3i0woj0kP8UrYT4xSLOJ1MdiWFD2Q/preview?usp=embed_googleplus"
+                  style="top: 0; left: 0; width: 100%; height: 100%; position: absolute; border: 0;"
+                  allowfullscreen></iframe>
         </div>
-
-        <div id="reconstruction" class="page reconstruction-background">
-            <div class="elem-title">Argument Paragraph Response</div>
-            <div class="elem-content">
-                <img src="data:image/jpeg;base64,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" alt="Refugee Image">
-                <div class="elem-text">
-                    <p>In social studies class, we wrote an argument essay on Reconstruction where I learned about the experiences of African Americans during the era of Reconstruction. I found it interesting how people from the south could be so arrogant when it came to the color of their skin. In writing, I focused more on controlling my usage of commas while writing, which is a problem I have improved upon in this piece. However, I need to work on my tense, being sure to keep a steady past, present, or future tense throughout the entire paragraph.</p>
-                </div>
-            </div>
-            <div class="embed-container">
-                <div style="left: 0; width: 100%; height: 0; position: relative; padding-bottom: 129.4118%;">
-                    <iframe src="https://docs.google.com/document/d/1rn3j5UBY_Bll9Wlp_3SuN2XF9WngXtPy5LG1MQ0RmOY/preview?usp=embed_googleplus" style="top: 0; left: 0; width: 100%; height: 100%; position: absolute; border: 0;" allowfullscreen></iframe>
-                </div>
-            </div>
-            <a href="https://docs.google.com/document/d/1rn3j5UBY_Bll9Wlp_3SuN2XF9WngXtPy5LG1MQ0RmOY/" class="fancy-button">Reconstruction Paragraph Response Link</a>
-        </div>
-
-        <div id="txt2txt" class="page">
-            <div class="elem-title">Text to Text Connections Mini Essay</div>
-            <div class="elem-content">
-                <img src="data:image/jpeg;base64,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">
-                <div class="elem-text">
-                    <p>In writing my paragraphs about the effects of war from Inside Out & Back Again by Thanhha Lai and Refugee by Alan Gratz, I learned the dangerous journeys of refugees and what they endure throughout. For my writing skills, I learned how to properly punctuate and transition to a quote. However, I need to work on including each of the 5Ws, who what when where & why.</p>
-                </div>
-            </div>
-            <div class="embed-container">
-                <div style="left: 0; width: 100%; height: 0; position: relative; padding-bottom: 129.4118%;">
-                    <iframe src="https://docs.google.com/document/d/11s_T1qcs_ZW4cz7bUYBcp8dUYCD8UPsFi8NIW4WlpW8/preview?usp=embed_googleplus" style="top: 0; left: 0; width: 100%; height: 100%; position: absolute; border: 0;" allowfullscreen></iframe>
-                </div>
-            </div>
-            <a href="https://docs.google.com/document/d/11s_T1qcs_ZW4cz7bUYBcp8dUYCD8UPsFi8NIW4WlpW8/" class="fancy-button">Text to Text Connections Essay Link</a>
-        </div>
-
-        <div id="extras" class="page extras-page">
-            <div class="extras-container">
-                <h2>Extras</h2>
-                <label for="darkModeToggle">Dark Mode:</label>
-                <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
-                <div>
-                    <label for="fontSizeSlider">Font Size:</label>
-                    <input type="range" id="fontSizeSlider" min="0.8" max="2" step="0.1" value="1" onchange="adjustTextSize(this.value)">
-                </div>
-                <button class="fancy-button" onclick="confirmRedirect()">Go to the Breadsite</button>
-                <!-- Fancy buttons to redirect to embeds yay -->
-                <a href="https://docs.google.com/document/d/1vCl-PloZVrL4Fx3iMe76J0rq9l_lfhbCxl40U8ULXEY" class="fancy-button">BioPoem Link</a>
-                <a href="https://docs.google.com/document/d/1PDtlL5TLn7mMEl3i0woj0kP8UrYT4xSLOJ1MdiWFD2Q" class="fancy-button">Inside Out & Back Again and Refugee Paragraphs Link</a>
-                <a href="https://docs.google.com/document/d/1rn3j5UBY_Bll9Wlp_3SuN2XF9WngXtPy5LG1MQ0RmOY" class="fancy-button">Reconstruction Paragraph Response Link</a>
-                <a href="https://docs.google.com/document/d/11s_T1qcs_ZW4cz7bUYBcp8dUYCD8UPsFi8NIW4WlpW8" class="fancy-button">Text to Text Connections Essay Link</a>
-            </div>
-        </div>
-
-        <div id="funPaint" class="page paint-container">
-            <h2>Fun Paint</h2>
-            <canvas id="paintCanvas" width="800" height="600"></canvas>
-            <div>
-                <label for="thicknessSlider">Thickness:</label>
-                <input type="range" id="thicknessSlider" class="slider" min="1" max="20" value="5" onchange="updateThickness(this.value)">
-                <label for="colorPicker">Color:</label>
-                <input type="color" id="colorPicker" value="#000000" onchange="updateColor(this.value)">
-                <button onclick="resetCanvas()" class="fancy-button">Reset Canvas</button>
-            </div>
-        </div>
+      </div>
+      <a href="https://docs.google.com/document/d/1PDtlL5TLn7mMEl3i0woj0kP8UrYT4xSLOJ1MdiWFD2Q" class="fancy-button">
+        Inside Out &amp; Back Again and Refugee Paragraphs Link
+      </a>
     </div>
 
-    <script>
-        // Dark Mode Toggle
-        document.addEventListener("DOMContentLoaded", () => {
-            const darkMode = localStorage.getItem("darkMode");
-            const fontSize = localStorage.getItem("fontSize");
+    <!-- Reconstruction Paragraph Response Page -->
+    <div id="reconstruction" class="page reconstruction-background">
+      <!-- Banner (matching home size) -->
+      <div class="page-banner reconstruction-banner">
+        Argument Paragraph Response
+      </div>
+      <div class="elem-content">
+        <!-- Updated side image link -->
+        <img src="https://static.pbslearningmedia.org/media/collections/600_x_338_Thumb_Recon_EmbU6Wy.png" alt="Reconstruction Image">
+        <div class="elem-text">
+          <p>In social studies class, we wrote an argument essay on Reconstruction where I learned about the experiences of African Americans during the era of Reconstruction. I found it interesting how people from the south could be so arrogant when it came to the color of their skin. In writing, I focused more on controlling my usage of commas while writing, which is a problem I have improved upon in this piece. However, I need to work on my tense, being sure to keep a steady past, present, or future tense throughout the entire paragraph.</p>
+        </div>
+      </div>
+      <div class="embed-container">
+        <div style="left: 0; width: 100%; height: 0; position: relative; padding-bottom: 129.4118%;">
+          <iframe src="https://docs.google.com/document/d/1rn3j5UBY_Bll9Wlp_3SuN2XF9WngXtPy5LG1MQ0RmOY/preview?usp=embed_googleplus"
+                  style="top: 0; left: 0; width: 100%; height: 100%; position: absolute; border: 0;"
+                  allowfullscreen></iframe>
+        </div>
+      </div>
+      <a href="https://docs.google.com/document/d/1rn3j5UBY_Bll9Wlp_3SuN2XF9WngXtPy5LG1MQ0RmOY/" class="fancy-button">
+        Reconstruction Paragraph Response Link
+      </a>
+    </div>
 
-            if (darkMode === "enabled") {
-                document.body.classList.add("dark-mode");
-                document.getElementById("darkModeToggle").checked = true;
-            }
-            if (fontSize) document.body.style.fontSize = `${fontSize}em`;
-        });
+    <!-- Text to Text Connections Mini Essay Page -->
+    <div id="txt2txt" class="page txt2txt-background">
+      <!-- Banner (matching home size) -->
+      <div class="page-banner txt2txt-banner">
+        Text to Text Connections Mini Essay
+      </div>
+      <div class="elem-content">
+        <!-- Replaced side image with requested link -->
+        <img src="https://cdn.carnegiecouncil.org/media/cceia/_1000x650_crop_center-center_none_ns/AsylumSeekers_2023-04-10-044705_qyri.jpg?v=1731593538"
+             alt="Text to Text Side Image"
+             style="border-radius: 8px;">
+        <div class="elem-text">
+          <p>In writing my paragraphs about the effects of war from Inside Out & Back Again by Thanhha Lai and Refugee by Alan Gratz, I learned the dangerous journeys of refugees and what they endure throughout. For my writing skills, I learned how to properly punctuate and transition to a quote. However, I need to work on including each of the 5Ws, who what when where & why.</p>
+        </div>
+      </div>
+      <div class="embed-container">
+        <div style="left: 0; width: 100%; height: 0; position: relative; padding-bottom: 129.4118%;">
+          <iframe src="https://docs.google.com/document/d/11s_T1qcs_ZW4cz7bUYBcp8dUYCD8UPsFi8NIW4WlpW8/preview?usp=embed_googleplus"
+                  style="top: 0; left: 0; width: 100%; height: 100%; position: absolute; border: 0;"
+                  allowfullscreen></iframe>
+        </div>
+      </div>
+      <a href="https://docs.google.com/document/d/11s_T1qcs_ZW4cz7bUYBcp8dUYCD8UPsFi8NIW4WlpW8/"
+         class="fancy-button">
+         Text to Text Connections Essay Link
+      </a>
+    </div>
 
-        function openPage(event, pageId) {
-            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+    <!-- Title Analysis Essay Page -->
+    <div id="titleAnalysis" class="page titleAnalysis-background">
+      <!-- Banner (matching home size) -->
+      <div class="page-banner titleAnalysis-banner">
+        Title Analysis Essay
+      </div>
+      <div class="elem-content">
+        <!-- Smaller side image -->
+        <img src="https://img1.od-cdn.com/ImageType-100/0427-1/%7B57FC5AA3-B24D-4248-850A-586BFC1FA2CE%7DIMG100.JPG"
+             alt="Title Analysis Side Image"
+             class="titleAnalysis-img">
+        <div class="elem-text">
+          <!-- Reflection text (unitalicized) -->
+          <p>
+            In this assignment to compare the themes of the novel Inside Out & Back Again by Thanhha Lai to the title, I learned how everything in the story, including the title, somehow clicks together in a compelling way. For my writing skills, I attempted to incorporate some of the teacher examples while still maintaining originality and fluency. This approach did occasionally confuse me, but overall I believe it worked out well. However, I still need to improve my organization, as in the second half of the essay I seem to have mixed up the examples and didn’t put the right one in, so I must be sure to look out for that.
+          </p>
+        </div>
+      </div>
+      <div style="left: 0; width: 100%; height: 0; position: relative; padding-bottom: 129.4118%;">
+        <iframe src="https://docs.google.com/document/d/1hGELIBFbFEb5Iiy7dFobcVpN1RXrwrNsxwF9lhWr_RY/preview?usp=embed_googleplus"
+                style="top: 0; left: 0; width: 100%; height: 100%; position: absolute; border: 0;"
+                allowfullscreen></iframe>
+      </div>
+      <a href="https://docs.google.com/document/d/1hGELIBFbFEb5Iiy7dFobcVpN1RXrwrNsxwF9lhWr_RY/edit?tab=t.0"
+         class="fancy-button">
+         Title Analysis Essay Link
+      </a>
+    </div>
 
-            document.getElementById(pageId).classList.add('active');
-            event.currentTarget.classList.add('active');
-        }
+    <!-- Extras Page -->
+    <div id="extras" class="page extras-page">
+      <div class="extras-container">
+        <h2>Extras</h2>
+        <label for="darkModeToggle">Dark Mode:</label>
+        <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
 
-        function toggleDarkMode() {
-            const isDark = document.getElementById("darkModeToggle").checked;
-            document.body.classList.toggle("dark-mode", isDark);
-            document.querySelector(".content").classList.toggle("dark-mode", isDark);
-            document.querySelector(".tabs").classList.toggle("dark-mode", isDark);
-            localStorage.setItem("darkMode", isDark ? "enabled" : "disabled");
-        }
+        <div>
+          <label for="fontSizeSlider">Font Size:</label>
+          <input type="range" id="fontSizeSlider" min="0.8" max="2" step="0.1" value="1.4" onchange="adjustTextSize(this.value)">
+        </div>
 
-        function adjustTextSize(scale) {
-            document.body.style.fontSize = `${scale}em`;
-            localStorage.setItem("fontSize", scale);
-        }
+        <button class="fancy-button" onclick="confirmRedirect()">Go to the Breadsite</button>
 
-        function confirmRedirect() {
-            const confirmation = confirm("This is not related to my English/Social Studies project and should be ignored. However, you may enter it and see my other work with my friends.");
-            if (confirmation) {
-                window.location.href = '/breadsite/';
-            }
-        }
+        <!-- Links to all docs -->
+        <a href="https://docs.google.com/document/d/1vCl-PloZVrL4Fx3iMe76J0rq9l_lfhbCxl40U8ULXEY" class="fancy-button">BioPoem Link</a>
+        <a href="https://docs.google.com/document/d/1PDtlL5TLn7mMEl3i0woj0kP8UrYT4xSLOJ1MdiWFD2Q" class="fancy-button">
+          Inside Out &amp; Back Again and Refugee Paragraphs Link
+        </a>
+        <a href="https://docs.google.com/document/d/1rn3j5UBY_Bll9Wlp_3SuN2XF9WngXtPy5LG1MQ0RmOY" class="fancy-button">
+          Reconstruction Paragraph Response Link
+        </a>
+        <a href="https://docs.google.com/document/d/11s_T1qcs_ZW4cz7bUYBcp8dUYCD8UPsFi8NIW4WlpW8" class="fancy-button">
+          Text to Text Connections Essay Link
+        </a>
+        <a href="https://docs.google.com/document/d/1hGELIBFbFEb5Iiy7dFobcVpN1RXrwrNsxwF9lhWr_RY/edit?tab=t.0"
+           class="fancy-button">
+          Title Analysis Essay Link
+        </a>
+      </div>
+    </div>
 
-        // Paint Functions
-        const canvas = document.getElementById("paintCanvas");
-        const ctx = canvas.getContext("2d");
-        let painting = false;
-        let brushColor = "#000000";
-        let brushThickness = 5;
+    <!-- Fun Paint Page -->
+    <div id="funPaint" class="page paint-container">
+      <h2>Fun Paint</h2>
+      <canvas id="paintCanvas" width="800" height="600"></canvas>
+      <div>
+        <label for="thicknessSlider">Thickness:</label>
+        <input type="range" id="thicknessSlider" class="slider" min="1" max="20" value="5" onchange="updateThickness(this.value)">
+        <label for="colorPicker">Color:</label>
+        <input type="color" id="colorPicker" value="#000000" onchange="updateColor(this.value)">
+        <button onclick="resetCanvas()" class="fancy-button">Reset Canvas</button>
+      </div>
+    </div>
+  </div>
 
-        function startPosition(e) {
-            painting = true;
-            draw(e);
-        }
+  <script>
+    // Keep overlay until window.onload (all assets loaded)
+    window.onload = function() {
+      document.getElementById('loadingOverlay').style.display = 'none';
+    };
 
-        function endPosition() {
-            painting = false;
-            ctx.beginPath();
-        }
+    // Dark Mode / Font Size Persistence
+    document.addEventListener("DOMContentLoaded", () => {
+      const darkMode = localStorage.getItem("darkMode");
+      const fontSize = localStorage.getItem("fontSize");
 
-        function draw(e) {
-            if (!painting) return;
+      if (darkMode === "enabled") {
+        document.body.classList.add("dark-mode");
+        document.getElementById("darkModeToggle").checked = true;
+      }
+      if (fontSize) {
+        document.body.style.fontSize = `${fontSize}em`;
+        document.getElementById("fontSizeSlider").value = fontSize;
+      }
+    });
 
-            // Calculate mouse position relative to canvas
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+    function openPage(event, pageId) {
+      document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
 
-            ctx.lineWidth = brushThickness;
-            ctx.lineCap = "round";
-            ctx.strokeStyle = brushColor;
+      document.getElementById(pageId).classList.add('active');
+      event.currentTarget.classList.add('active');
+    }
 
-            ctx.lineTo(x, y);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x, y);
-        }
+    function toggleDarkMode() {
+      const isDark = document.getElementById("darkModeToggle").checked;
+      document.body.classList.toggle("dark-mode", isDark);
+      document.querySelector(".content").classList.toggle("dark-mode", isDark);
+      document.querySelector(".tabs").classList.toggle("dark-mode", isDark);
+      localStorage.setItem("darkMode", isDark ? "enabled" : "disabled");
+    }
 
-        function updateThickness(thickness) {
-            brushThickness = thickness;
-        }
+    function adjustTextSize(scale) {
+      document.body.style.fontSize = `${scale}em`;
+      localStorage.setItem("fontSize", scale);
+    }
 
-        function updateColor(color) {
-            brushColor = color;
-        }
+    function confirmRedirect() {
+      const confirmation = confirm("This is not related to my English/Social Studies project and should be ignored. However, you may enter it and see my other work with my friends.");
+      if (confirmation) {
+        window.location.href = '/breadsite/';
+      }
+    }
 
-        function resetCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
+    // Paint Functions
+    const canvas = document.getElementById("paintCanvas");
+    const ctx = canvas.getContext("2d");
+    let painting = false;
+    let brushColor = "#000000";
+    let brushThickness = 5;
 
-        canvas.addEventListener("mousedown", startPosition);
-        canvas.addEventListener("mouseup", endPosition);
-        canvas.addEventListener("mousemove", draw);
-    </script>
+    function startPosition(e) {
+      painting = true;
+      draw(e);
+    }
 
+    function endPosition() {
+      painting = false;
+      ctx.beginPath();
+    }
+
+    function draw(e) {
+      if (!painting) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      ctx.lineWidth = brushThickness;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = brushColor;
+
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    }
+
+    function updateThickness(thickness) {
+      brushThickness = thickness;
+    }
+
+    function updateColor(color) {
+      brushColor = color;
+    }
+
+    function resetCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    canvas.addEventListener("mousedown", startPosition);
+    canvas.addEventListener("mouseup", endPosition);
+    canvas.addEventListener("mousemove", draw);
+  </script>
 </body>
 </html>
