@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sandbox</title>
+  <!-- Link to external CSS -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="mainContainer">
+    <!-- The simulation grid (500×500) -->
+    <div id="grid"></div>
+
+    <!-- Side panel (500px tall) -->
+    <div id="sidePanel">
+      <!-- Scrollable area (search + elements) -->
+      <div id="elementScroll">
+        <!-- CATEGORY BUTTONS -->
+        <div id="categoryButtons">
+          <button data-category="all" class="selectedCat">All</button>
+          <button data-category="liquids">Liquids</button>
+          <button data-category="powders">Powders</button>
+          <button data-category="solids">Solids</button>
+          <button data-category="gasses">Gasses</button>
+          <button data-category="explosives">Explosives</button>
+          <button data-category="life">Life</button>
+          <button data-category="cooking">Cooking</button>
+          <button data-category="electricity">Electricity</button>
+        </div>
+
+        <!-- Search box for elements -->
+        <div id="toolSearchContainer">
+          <input type="text" id="toolSearch" placeholder="Search elements..." />
+        </div>
+
+        <div id="toolbar">
+          <!-- Eraser is FIRST so it's always on top by default. -->
+          <div class="tool eraser" data-tool="eraser" data-cat="solids" title="Eraser">
+            <span>Eraser</span>
+          </div>
+          <!-- Tools in your desired order -->
+          <div class="tool sand selected" data-tool="sand" data-cat="powders" title="Sand"><span>S</span></div>
+          <div class="tool wall" data-tool="wall" data-cat="solids" title="Wall"><span>Wall</span></div>
+          <div class="tool water" data-tool="water" data-cat="liquids" title="Water"><span>W</span></div>
+          <div class="tool lava" data-tool="lava" data-cat="liquids" title="Lava"><span>Lv</span></div>
+          <div class="tool stone" data-tool="stone" data-cat="solids" title="Stone"><span>St</span></div>
+          <div class="tool water-vapor" data-tool="water-vapor" data-cat="gasses" title="Water Vapor"><span>V</span></div>
+          <div class="tool copper" data-tool="copper" data-cat="electricity" title="Copper"><span>Cu</span></div>
+          <div class="tool steel" data-tool="steel" data-cat="solids" title="Steel"><span>Fe</span></div>
+          <div class="tool ice" data-tool="ice" data-cat="solids" title="Ice"><span>I</span></div>
+          <div class="tool wood" data-tool="wood" data-cat="solids" title="Wood"><span>Wd</span></div>
+          <div class="tool fire" data-tool="fire" data-cat="gasses" title="Fire"><span>F</span></div>
+          <div class="tool smoke" data-tool="smoke" data-cat="gasses" title="Smoke"><span>Sm</span></div>
+          <div class="tool ash" data-tool="ash" data-cat="powders" title="Ash"><span>A</span></div>
+          <div class="tool glass" data-tool="glass" data-cat="solids" title="Glass"><span>G</span></div>
+          <div class="tool bomb" data-tool="bomb" data-cat="explosives" title="Bomb"><span>B</span></div>
+          <div class="tool dirt" data-tool="dirt" data-cat="powders" title="Dirt"><span>Di</span></div>
+          <div class="tool wet-dirt" data-tool="wet-dirt" data-cat="powders" title="Wet Dirt"><span>WDi</span></div>
+          <div class="tool wheat-seeds" data-tool="wheat-seeds" data-cat="life" title="Wheat Seeds">
+            <span>WSeeds</span>
+          </div>
+          <div class="tool flour" data-tool="flour" data-cat="powders,cooking" title="Flour"><span>Flr</span></div>
+          <div class="tool dough" data-tool="dough" data-cat="cooking" title="Dough"><span>Dh</span></div>
+          <div class="tool bread" data-tool="bread" data-cat="cooking" title="Bread"><span>Br</span></div>
+          <div class="tool plant-root" data-tool="plant-root" data-cat="life" title="Plant Roots"><span>PR</span></div>
+          <div class="tool spark" data-tool="spark" data-cat="electricity" title="Spark"><span>Sp</span></div>
+          <div class="tool oak-seeds" data-tool="oak-seeds" data-cat="life" title="Oak Tree Seeds"><span>OakS</span></div>
+          <div class="tool grass" data-tool="grass" data-cat="life" title="Grass"><span>Gr</span></div>
+          <div class="tool gas" data-tool="gas" data-cat="gasses" title="Gas"><span>Gas</span></div>
+          <div class="tool cooler" data-tool="cooler" data-cat="electricity" title="Cooler"><span>CL</span></div>
+          <div class="tool heater" data-tool="heater" data-cat="electricity" title="Heater"><span>HT</span></div>
+
+          <!-- New: Additional Electric Elements -->
+          <div class="tool heat-separator" data-tool="heat-separator" data-cat="electricity" title="Heat Separator">
+            <span>HS</span>
+          </div>
+          <div class="tool input" data-tool="input" data-cat="electricity" title="Input"><span>In</span></div>
+          <div class="tool output" data-tool="output" data-cat="electricity" title="Output"><span>Out</span></div>
+          <div class="tool not-gate" data-tool="not-gate" data-cat="electricity" title="Not Gate"><span>NOT</span></div>
+          <div class="tool and-gate" data-tool="and-gate" data-cat="electricity" title="And Gate"><span>AND</span></div>
+          <div class="tool blocker" data-tool="blocker" data-cat="electricity" title="Blocker"><span>Blkr</span></div>
+        </div>
+      </div>
+
+      <!-- HUD (not scrollable) -->
+      <div id="hud">
+        <div id="hudTemp">Temp: -- °C</div>
+        <div id="hudElem">Element: --</div>
+        <div id="hudFPS">FPS: --</div>
+      </div>
+
+      <!-- Speed slider & Clear button (not scrollable) -->
+      <div id="bottomControls">
+        <div id="speedContainer">
+          <label for="speed">Simulation Speed:</label>
+          <input type="range" id="speed" min="0" max="4" step="0.01" value="0.10" />
+          <span id="speedValue">0.10</span>×
+        </div>
+        <button id="clearAllBtn">Clear All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Link to external JavaScript -->
+  <script src="main.js"></script>
+</body>
+</html>
