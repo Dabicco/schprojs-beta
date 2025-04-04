@@ -1,0 +1,2198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shooter Quiz: Prohibition Edition</title>
+  <style>
+    /* Global Styles */
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      background: #222;
+      position: relative;
+    }
+    canvas {
+      display: block;
+      margin: 20px auto;
+      background: #fff;
+      border: 2px solid #333;
+    }
+    /* Credits */
+    #creditLeft {
+      position: absolute;
+      bottom: 5px;
+      left: 5px;
+      font-size: 12px;
+      color: #fff;
+      text-shadow: 1px 1px 0 #000;
+      z-index: 30;
+    }
+    #creditRight {
+      position: absolute;
+      bottom: 5px;
+      right: 5px;
+      font-size: 12px;
+      color: #fff;
+      text-shadow: 1px 1px 0 #000;
+      z-index: 30;
+    }
+    /* Main Menu & Options Screen */
+    #menuScreen, #optionsScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      z-index: 20;
+      /* Default Neon Blue theme background; will update with theme */
+      background: linear-gradient(135deg, #2c3e50, #2980b9);
+      animation: fadeIn 1s ease-out;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+    }
+    #menuScreen.active, #optionsScreen.active {
+      display: flex;
+    }
+    #menuScreen h1 {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+    #menuScreen p {
+      font-size: 20px;
+      max-width: 600px;
+      margin-bottom: 30px;
+    }
+    .menuBtn {
+      background-color: #2980b9;
+      color: #ffffff;
+      border: none;
+      padding: 15px 30px;
+      margin: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 22px;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+    .menuBtn:hover {
+      background-color: #3498db;
+      transform: scale(1.1);
+    }
+    /* Options Menu Additional */
+    #optionsScreen h2 {
+      font-size: 36px;
+      margin-bottom: 20px;
+    }
+    #optionsScreen label {
+      font-size: 20px;
+      margin-bottom: 10px;
+      display: block;
+    }
+    #optionsScreen select {
+      font-size: 20px;
+      padding: 5px;
+      margin-bottom: 20px;
+    }
+    /* Game Over Screen */
+    #gameOverScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 30;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      color: #ffffff;
+      padding: 20px;
+    }
+    #gameOverScreen h2 {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+    #gameOverScreen p {
+      font-size: 32px;
+      margin-bottom: 30px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    /* In-Game HUD Overlays */
+    #questionBox, #scoreBox, #timeBarContainer {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      pointer-events: none;
+      color: #ffffff;
+      text-shadow: 1px 1px 0 #000;
+    }
+    #questionBox {
+      top: 10px;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    #scoreBox {
+      top: 50px;
+      font-size: 20px;
+    }
+    #timeBarContainer {
+      top: 80px;
+      height: 20px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Credits -->
+  <div id="creditLeft">Dabicco Engine 8.6.2</div>
+  <div id="creditRight">Why are you reading this?</div>
+
+  <!-- Main Menu -->
+  <div id="menuScreen" class="active">
+    <h1>Shooter Quiz</h1>
+    <p>
+      Welcome, students! In this review game, shoot the moving answer bubbles to answer questions about U.S. Prohibition.<br>
+      Use the Left/Right arrow keys to move and the Spacebar to shoot.<br>
+      Wrong answers will flash red and subtract points.<br>
+      Answer each question within 10 seconds or lose points.<br>
+      After 3 correct answers, you'll face a boss where your score becomes your ammo.<br>
+      If you run out of bullets during the boss fight, you lose.<br>
+      When the boss is defeated, the next quiz question appears.
+    </p>
+    <button class="menuBtn" onclick="startGame()">Start Game</button>
+    <button class="menuBtn" onclick="showOptions()">Options</button>
+  </div>
+
+  <!-- Options Menu -->
+  <div id="optionsScreen">
+    <h2>Options</h2>
+    <label for="scaleSelect">Game Window Scale:</label>
+    <select id="scaleSelect">
+      <option value="1" selected>1x</option>
+      <option value="2">2x</option>
+      <option value="3">3x</option>
+      <option value="automatic">Automatic</option>
+    </select>
+    <label for="graphicsSelect">Graphics Quality:</label>
+    <select id="graphicsSelect">
+      <option value="Fast">Fast</option>
+      <option value="Fancy" selected>Fancy</option>
+      <option value="Fabulous">Fabulous</option>
+    </select>
+    <label for="themeSelect">Theme:</label>
+    <select id="themeSelect">
+      <option value="Neon Blue" selected>Neon Blue</option>
+      <option value="Classic Sun">Classic Sun</option>
+      <option value="Midnight">Midnight</option>
+      <option value="Oreo Cookies">Oreo Cookies</option>
+      <option value="Slime Green">Slime Green</option>
+      <option value="Purple Button">Purple Button</option>
+      <option value="Catcite Blinding White">Catcite Blinding White</option>
+    </select>
+    <label for="screenAnimSelect">Screen Animations:</label>
+    <select id="screenAnimSelect">
+      <option value="Max" selected>Max</option>
+      <option value="Min">Min</option>
+      <option value="Off">Off</option>
+    </select>
+    <button class="menuBtn" onclick="hideOptions()">Back to Main Menu</button>
+  </div>
+
+  <!-- Game Over Screen -->
+  <div id="gameOverScreen">
+    <h2 id="gameOverText"></h2>
+    <p id="finalScoreText"></p>
+    <button class="menuBtn" onclick="returnToMenu()">Return to Main Menu</button>
+  </div>
+
+  <!-- In-Game HUD Overlays -->
+  <div id="questionBox"></div>
+  <div id="scoreBox">Score: 0</div>
+  <div id="timeBarContainer"></div>
+  <!-- Game Canvas -->
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+  <script>
+    /* ========= Global Variables and Settings ========= */
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let gameLoopId = null;
+    let running = false;
+    
+    // Game state variables
+    let phase = "quiz"; // "quiz" or "boss"
+    let score = 0;      // In quiz, score; in boss, becomes ammo.
+    let correctAnswersCount = 0;
+    let gameOver = false;
+    let flashAlpha = 0;
+    let confettiParticles = [];
+    let globalTime = 0;
+    let questionTimer = 10.0;
+    let freezeQuiz = false;
+    let bossIntroTimer = 0;
+    let screenShake = 0;
+    
+    // New Options
+    let graphicsQuality = "Fancy";
+    let screenAnimations = "Max"; // Options: Max, Min, Off
+    const scaleSelect = document.getElementById('scaleSelect');
+    const graphicsSelect = document.getElementById('graphicsSelect');
+    const themeSelect = document.getElementById('themeSelect');
+    const screenAnimSelect = document.getElementById('screenAnimSelect');
+    // Set defaults
+    scaleSelect.value = "1";
+    graphicsSelect.value = "Fancy";
+    themeSelect.value = "Neon Blue";
+    screenAnimSelect.value = "Max";
+    
+    // Theme definitions – new themes added
+    const themes = {
+      "Neon Blue": {
+        bodyBg: "linear-gradient(135deg, #2c3e50, #2980b9)",
+        menuBg: "linear-gradient(135deg, #2c3e50, #2980b9)",
+        textColor: "#ffffff",
+        buttonColor: "#2980b9",
+        buttonHover: "#3498db",
+        confettiColors: ["#2980b9", "#3498db", "#1abc9c", "#2ecc71", "#9b59b6"]
+      },
+      "Classic Sun": {
+        bodyBg: "linear-gradient(135deg, #ff9a9e, #fad0c4)",
+        menuBg: "linear-gradient(135deg, #ff9a9e, #fad0c4)",
+        textColor: "#333333",
+        buttonColor: "#ffcc00",
+        buttonHover: "#ff6699",
+        confettiColors: ["#ffcc00", "#ff6699", "#66ccff", "#99ff66", "#ff9966"]
+      },
+      "Midnight": {
+        bodyBg: "linear-gradient(135deg, #000428, #004e92)",
+        menuBg: "linear-gradient(135deg, #000428, #004e92)",
+        textColor: "#ffffff",
+        buttonColor: "#004e92",
+        buttonHover: "#005bb5",
+        confettiColors: ["#1c1c1c", "#2c3e50", "#34495e", "#7f8c8d", "#95a5a6"]
+      },
+      "Oreo Cookies": {
+        bodyBg: "linear-gradient(135deg, #000000, #434343)",
+        menuBg: "linear-gradient(135deg, #000000, #434343)",
+        textColor: "#ffffff",
+        buttonColor: "#000000",
+        buttonHover: "#434343",
+        confettiColors: ["#ffffff", "#000000"]
+      },
+      "Slime Green": {
+        bodyBg: "linear-gradient(135deg, #006400, #32cd32)",
+        menuBg: "linear-gradient(135deg, #006400, #32cd32)",
+        textColor: "#ffffff",
+        buttonColor: "#228B22",
+        buttonHover: "#32CD32",
+        confettiColors: ["#32cd32", "#3cb371", "#2e8b57", "#66cdaa", "#8fbc8f"]
+      },
+      "Purple Button": {
+        bodyBg: "linear-gradient(135deg, #4b0082, #800080)",
+        menuBg: "linear-gradient(135deg, #4b0082, #800080)",
+        textColor: "#ffffff",
+        buttonColor: "#800080",
+        buttonHover: "#9370db",
+        confettiColors: ["#800080", "#9932cc", "#8a2be2", "#9400d3", "#ba55d3"]
+      },
+      "Catcite Blinding White": {
+        bodyBg: "linear-gradient(135deg, #ffffff, #f0f0f0)",
+        menuBg: "linear-gradient(135deg, #ffffff, #f0f0f0)",
+        textColor: "#000000",
+        buttonColor: "#ffffff",
+        buttonHover: "#dddddd",
+        confettiColors: ["#ffffff", "#000000"]
+      }
+    };
+    let currentTheme = themes["Neon Blue"];
+    
+    function applyTheme() {
+      currentTheme = themes[themeSelect.value];
+      document.body.style.background = currentTheme.bodyBg;
+      document.getElementById('menuScreen').style.background = currentTheme.menuBg;
+      document.getElementById('optionsScreen').style.background = currentTheme.menuBg;
+      document.getElementById('menuScreen').style.color = currentTheme.textColor;
+      document.getElementById('optionsScreen').style.color = currentTheme.textColor;
+      document.getElementById('questionBox').style.color = currentTheme.textColor;
+      document.getElementById('scoreBox').style.color = currentTheme.textColor;
+      // Update button colors by setting inline style on all .menuBtn elements
+      let btns = document.getElementsByClassName('menuBtn');
+      for (let btn of btns) {
+        btn.style.backgroundColor = currentTheme.buttonColor;
+        btn.style.color = currentTheme.textColor;
+      }
+      // Update confetti colors will use currentTheme.confettiColors in triggerConfetti.
+      applyThemeAnimations();
+    }
+    
+    function applyThemeAnimations() {
+      // If screen animations are Off, remove fadeIn animation
+      if (screenAnimations === "Off") {
+        document.getElementById('menuScreen').style.animation = "none";
+        document.getElementById('optionsScreen').style.animation = "none";
+      } else if (screenAnimations === "Min") {
+        // Use a faster fadeIn animation (or remove some effects)
+        document.getElementById('menuScreen').style.animation = "fadeIn 0.5s ease-out";
+        document.getElementById('optionsScreen').style.animation = "fadeIn 0.5s ease-out";
+      } else {
+        document.getElementById('menuScreen').style.animation = "fadeIn 1s ease-out";
+        document.getElementById('optionsScreen').style.animation = "fadeIn 1s ease-out";
+      }
+    }
+    
+    themeSelect.addEventListener('change', applyTheme);
+    screenAnimSelect.addEventListener('change', () => { 
+      screenAnimations = screenAnimSelect.value; 
+      applyThemeAnimations();
+    });
+    applyTheme();
+    
+    function applyScale() {
+      const val = scaleSelect.value;
+      if (val === "automatic") {
+        let aspect = 800 / 600;
+        let newWidth = window.innerWidth * 0.9;
+        let newHeight = newWidth / aspect;
+        if (newHeight > window.innerHeight * 0.9) {
+          newHeight = window.innerHeight * 0.9;
+          newWidth = newHeight * aspect;
+        }
+        canvas.style.width = newWidth + "px";
+        canvas.style.height = newHeight + "px";
+      } else {
+        let scale = parseInt(val);
+        canvas.style.width = 800 * scale + "px";
+        canvas.style.height = 600 * scale + "px";
+      }
+    }
+    scaleSelect.addEventListener('change', applyScale);
+    applyScale();
+    
+    graphicsSelect.addEventListener('change', () => { graphicsQuality = graphicsSelect.value; });
+    screenAnimSelect.addEventListener('change', () => { screenAnimations = screenAnimSelect.value; });
+    
+    /* ========= Game Objects ========= */
+    const player = {
+      x: canvas.width / 2 - 20,
+      y: canvas.height - 60,
+      width: 40,
+      height: 40,
+      speed: 5,
+      dx: 0,
+      color: '#333',
+      health: 3,
+      invulnerable: false,
+      invulnTimer: 0,
+      ammo: 0
+    };
+    
+    let boss = null;
+    const bossBullets = [];
+    const bullets = [];
+    const balls = [];
+    const questions = [
+      { question: 'When did Prohibition begin in the US?', options: ['1920', '1919', '1921', '1918'], correct: '1920' },
+      { question: 'Which Amendment started Prohibition?', options: ['18th', '19th', '16th', '17th'], correct: '18th' },
+      { question: 'What were illegal bars called?', options: ['Speakeasies', 'Bootleggers', 'Dive Bars', 'Clubhouses'], correct: 'Speakeasies' },
+      { question: 'Which notorious bootlegger became famous during Prohibition?', options: ['Al Capone', 'Meyer Lansky', 'Bugsy Siegel', 'John Gotti'], correct: 'Al Capone' },
+      { question: 'When was Prohibition repealed?', options: ['1933', '1931', '1934', '1932'], correct: '1933' },
+      { question: 'Which agency enforced Prohibition laws?', options: ['FBI', 'ATF', 'Prohibition Bureau', 'Secret Service'], correct: 'Prohibition Bureau' },
+      { question: 'What term describes the illegal transport of alcohol?', options: ['Smuggling', 'Bootlegging', 'Hijacking', 'Fencing'], correct: 'Bootlegging' },
+      { question: 'Which group was key in advocating for Prohibition?', options: ['The Anti-Saloon League', 'Labor Unions', 'Big Banks', 'Farmers'], correct: 'The Anti-Saloon League' },
+      { question: 'What did many call the alcohol produced illegally?', options: ['Moonshine', 'Hooch', 'Bootleg liquor', 'All of the above'], correct: 'All of the above' },
+      { question: 'Which cultural trend emerged during Prohibition?', options: ['Jazz Age', 'Rock and Roll', 'Hip Hop', 'Swinging Sixties'], correct: 'Jazz Age' }
+    ];
+    let currentQuestionIndex = 0;
+    let currentQuestion = questions[currentQuestionIndex];
+    
+    function shuffleOptions(question) {
+      const options = [...question.options];
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+      }
+      return options;
+    }
+    
+    /* ========= Input Handling ========= */
+    const keys = {};
+    document.addEventListener('keydown', e => { keys[e.key] = true; });
+    document.addEventListener('keyup', e => { keys[e.key] = false; });
+    
+    /* ========= Options Menu Functions ========= */
+    function showOptions() {
+      document.getElementById('menuScreen').classList.remove('active');
+      document.getElementById('optionsScreen').classList.add('active');
+    }
+    function hideOptions() {
+      document.getElementById('optionsScreen').classList.remove('active');
+      document.getElementById('menuScreen').classList.add('active');
+    }
+    
+    /* ========= Game Functions ========= */
+    function spawnAnswerBalls() {
+      balls.length = 0;
+      const options = shuffleOptions(currentQuestion);
+      options.forEach((option, index) => {
+        const ball = {
+          answer: option,
+          x: Math.random() * (canvas.width - 60) + 30,
+          y: Math.random() * (canvas.height / 2 - 60) + 60,
+          radius: 25,
+          vx: (Math.random() * 1 + 0.5) * (Math.random() < 0.5 ? 1 : -1),
+          vy: (Math.random() * 1 + 0.5) * (Math.random() < 0.5 ? 1 : -1),
+          color: currentTheme.confettiColors[index % currentTheme.confettiColors.length],
+          ax: 0,
+          ay: 0,
+          hit: false
+        };
+        balls.push(ball);
+      });
+    }
+    
+    function drawPlayer() {
+      ctx.fillStyle = player.color;
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+      ctx.fillStyle = '#000';
+      ctx.fillRect(player.x + player.width / 2 - 5, player.y - 15, 10, 10);
+    }
+    
+    function drawBoss() {
+      if (boss) {
+        ctx.fillStyle = boss.color;
+        ctx.fillRect(boss.x, boss.y, boss.width, boss.height);
+      }
+    }
+    
+    function drawBullets() {
+      bullets.forEach(bullet => {
+        ctx.fillStyle = bullet.owner === "player" ? 'red' : 'blue';
+        ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+      });
+      bossBullets.forEach(bullet => {
+        ctx.fillStyle = 'blue';
+        ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+      });
+    }
+    
+    function drawBalls() {
+      balls.forEach(ball => {
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+        ctx.fillStyle = ball.color;
+        ctx.fill();
+        ctx.closePath();
+        ctx.fillStyle = currentTheme.textColor;
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(ball.answer, ball.x, ball.y);
+      });
+    }
+    
+    function drawTimeBar() {
+      const barWidth = canvas.width * (questionTimer / 10);
+      ctx.fillStyle = 'green';
+      ctx.fillRect(0, 0, barWidth, 10);
+      ctx.strokeStyle = '#333';
+      ctx.strokeRect(0, 0, canvas.width, 10);
+    }
+    
+    function drawHUDBoss() {
+      ctx.fillStyle = currentTheme.textColor;
+      ctx.font = '20px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText("Bullets: " + player.ammo, 10, 30);
+      let hearts = "";
+      for (let i = 0; i < player.health; i++) { hearts += "❤️ "; }
+      ctx.fillText("Health: " + hearts, 10, 60);
+      if (boss) { ctx.fillText("Boss HP: " + boss.health, canvas.width - 150, 30); }
+    }
+    
+    function drawBossIntro() {
+      if (bossIntroTimer > 0) {
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.font = '60px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText("BOSS", canvas.width / 2, canvas.height / 2);
+      }
+    }
+    
+    function updatePlayer() {
+      if (keys['ArrowLeft'] && !keys['ArrowRight']) { player.dx = -player.speed; }
+      else if (keys['ArrowRight'] && !keys['ArrowLeft']) { player.dx = player.speed; }
+      else if (keys['ArrowLeft'] && keys['ArrowRight']) { player.dx = -player.speed; }
+      else { player.dx = 0; }
+      player.x += player.dx;
+      if (player.x < 0) player.x = 0;
+      if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+      if (player.invulnerable) {
+        player.invulnTimer -= 0.016;
+        if (player.invulnTimer <= 0) { player.invulnerable = false; }
+      }
+    }
+    
+    function updateBullets() {
+      for (let i = 0; i < bullets.length; i++) {
+        let bullet = bullets[i];
+        bullet.y -= bullet.speed;
+        if (bullet.y + bullet.height < 0) { bullets.splice(i, 1); i--; }
+      }
+      for (let i = 0; i < bossBullets.length; i++) {
+        let bullet = bossBullets[i];
+        bullet.x += bullet.vx;
+        bullet.y += bullet.vy;
+        if (bullet.x < 0 || bullet.x > canvas.width || bullet.y < 0 || bullet.y > canvas.height) {
+          bossBullets.splice(i, 1); i--;
+        }
+      }
+    }
+    
+    function updateBalls() {
+      balls.forEach(ball => {
+        ball.ax = (Math.random() - 0.5) * 0.05;
+        ball.ay = (Math.random() - 0.5) * 0.05;
+        ball.vx += ball.ax;
+        ball.vy += ball.ay;
+        const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
+        const maxSpeed = 2.5;
+        if (speed > maxSpeed) {
+          ball.vx = (ball.vx / speed) * maxSpeed;
+          ball.vy = (ball.vy / speed) * maxSpeed;
+        }
+        ball.x += ball.vx;
+        ball.y += ball.vy;
+        if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width) {
+          ball.vx *= -1;
+          ball.x = ball.x - ball.radius < 0 ? ball.radius : canvas.width - ball.radius;
+        }
+        if (ball.y - ball.radius < 60 || ball.y + ball.radius > canvas.height / 2 + 60) {
+          ball.vy *= -1;
+          ball.y = ball.y - ball.radius < 60 ? ball.radius + 60 : canvas.height / 2 + 60 - ball.radius;
+        }
+      });
+      for (let i = 0; i < balls.length; i++) {
+        for (let j = i + 1; j < balls.length; j++) {
+          let ballA = balls[i];
+          let ballB = balls[j];
+          let dx = ballB.x - ballA.x;
+          let dy = ballB.y - ballA.y;
+          let dist = Math.sqrt(dx * dx + dy * dy);
+          let minDist = ballA.radius + ballB.radius;
+          if (dist < minDist) {
+            let overlap = (minDist - dist) / 2;
+            let nx = dx / dist;
+            let ny = dy / dist;
+            ballA.x -= nx * overlap;
+            ballA.y -= ny * overlap;
+            ballB.x += nx * overlap;
+            ballB.y += ny * overlap;
+            let dVA = ballA.vx * nx + ballA.vy * ny;
+            let dVB = ballB.vx * nx + ballB.vy * ny;
+            let temp = dVA; dVA = dVB; dVB = temp;
+            ballA.vx = ballA.vx + (dVA - (ballA.vx * nx + ballA.vy * ny)) * nx;
+            ballA.vy = ballA.vy + (dVA - (ballA.vx * nx + ballA.vy * ny)) * ny;
+            ballB.vx = ballB.vx + (dVB - (ballB.vx * nx + ballB.vy * ny)) * nx;
+            ballB.vy = ballB.vy + (dVB - (ballB.vx * nx + ballB.vy * ny)) * ny;
+          }
+        }
+      }
+    }
+    
+    function updateFlash() {
+      if (flashAlpha > 0) {
+        flashAlpha -= 0.02;
+        if (flashAlpha < 0) flashAlpha = 0;
+      }
+    }
+    
+    function drawFlash() {
+      if (flashAlpha > 0 && screenAnimations !== "Off") {
+        ctx.fillStyle = `rgba(255,0,0,${flashAlpha})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+    
+    // Boss behavior: horizontal tracking and shooting
+    function updateBoss(dt) {
+      if (!boss) return;
+      boss.shootTimer -= dt;
+      if (boss.shootTimer <= 0) {
+        boss.shootTimer = 2.0;
+        let dx = (player.x + player.width/2) - (boss.x + boss.width/2);
+        let dy = (player.y + player.height/2) - (boss.y + boss.height/2);
+        let mag = Math.sqrt(dx * dx + dy * dy);
+        let bulletSpeed = 4;
+        let bulletVX = (dx / mag) * bulletSpeed;
+        let bulletVY = (dy / mag) * bulletSpeed;
+        bossBullets.push({
+          x: boss.x + boss.width/2 - 5,
+          y: boss.y + boss.height/2 - 5,
+          width: 10,
+          height: 10,
+          vx: bulletVX,
+          vy: bulletVY,
+          owner: "boss"
+        });
+      }
+      let targetX = player.x + player.width/2 - boss.width/2;
+      boss.x += (targetX - boss.x) * 0.02;
+      if (boss.x < 0) boss.x = 0;
+      if (boss.x + boss.width > canvas.width) boss.x = canvas.width - boss.width;
+    }
+    
+    function updateBossPhase(dt) {
+      updateBoss(dt);
+      if (bossIntroTimer > 0) { bossIntroTimer -= dt; }
+    }
+    
+    function updateScreenShake() {
+      if (screenShake > 0 && screenAnimations !== "Off") {
+        screenShake -= 0.5;
+        if (screenShake < 0) screenShake = 0;
+      } else {
+        screenShake = 0;
+      }
+    }
+    
+    /* ========= Main Game Loop ========= */
+    function gameLoop() {
+      let dt = 0.016;
+      globalTime += dt;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Apply screen shake if enabled and not Off
+      if (screenShake > 0 && screenAnimations !== "Off") {
+        let shakeX = (Math.random() - 0.5) * screenShake;
+        let shakeY = (Math.random() - 0.5) * screenShake;
+        ctx.save();
+        ctx.translate(shakeX, shakeY);
+      }
+      
+      updatePlayer();
+      updateBullets();
+      if (phase === "quiz") {
+        if (!freezeQuiz) { questionTimer -= dt; }
+        if (!freezeQuiz) { 
+          document.getElementById('questionBox').textContent = currentQuestion.question;
+        } else {
+          document.getElementById('questionBox').textContent = "";
+        }
+        if (screenAnimations !== "Off") { drawTimeBar(); }
+        updateBalls();
+      } else if (phase === "boss") {
+        document.getElementById('questionBox').textContent = "";
+        updateBossPhase(dt);
+      }
+      updateConfetti();
+      updateFlash();
+      updateScreenShake();
+      checkCollisions();
+      
+      if (phase === "quiz") { drawBalls(); }
+      else if (phase === "boss") {
+        drawBoss();
+        drawHUDBoss();
+        drawBossIntro();
+      }
+      drawPlayer();
+      drawBullets();
+      drawConfetti();
+      drawFlash();
+      
+      if (screenShake > 0 && screenAnimations !== "Off") { ctx.restore(); }
+      
+      if (!gameOver) { gameLoopId = requestAnimationFrame(gameLoop); }
+      else { showGameOver(); }
+    }
+    
+    /* ========= Collision Handling ========= */
+    function isCollidingQuiz(bullet, ball) {
+      let bulletCenterX = bullet.x + bullet.width / 2;
+      let bulletCenterY = bullet.y + bullet.height / 2;
+      let dx = ball.x - bulletCenterX;
+      let dy = ball.y - bulletCenterY;
+      let distance = Math.sqrt(dx * dx + dy * dy);
+      return distance < ball.radius + Math.max(bullet.width, bullet.height) / 2;
+    }
+    function isCollidingBoss(bullet, boss) {
+      return (
+        bullet.x < boss.x + boss.width &&
+        bullet.x + bullet.width > boss.x &&
+        bullet.y < boss.y + boss.height &&
+        bullet.y + bullet.height > boss.y
+      );
+    }
+    function isCollidingPlayer(bullet, player) {
+      return (
+        bullet.x < player.x + player.width &&
+        bullet.x + bullet.width > player.x &&
+        bullet.y < player.y + player.height &&
+        bullet.y + bullet.height > player.y
+      );
+    }
+    function checkCollisions() {
+      if (phase === "quiz") {
+        for (let i = 0; i < bullets.length; i++) {
+          let bullet = bullets[i];
+          for (let j = 0; j < balls.length; j++) {
+            let ball = balls[j];
+            if (isCollidingQuiz(bullet, ball) && !ball.hit) {
+              bullets.splice(i, 1); i--;
+              ball.hit = true;
+              if (ball.answer === currentQuestion.correct) {
+                score += 10;
+                correctAnswersCount++;
+                updateScore();
+                if (screenAnimations !== "Off") triggerConfetti();
+                if (screenAnimations !== "Off") screenShake = 10;
+                freezeQuiz = true;
+                balls.splice(j, 1);
+                setTimeout(nextQuestion, 1500);
+              } else {
+                score -= 5;
+                if (score < 0) score = 0;
+                updateScore();
+                if (screenAnimations !== "Off") triggerFlash();
+                balls.splice(j, 1);
+              }
+              return;
+            }
+          }
+        }
+        if (questionTimer <= 0 && !freezeQuiz) {
+          score -= 10;
+          if (score < 0) score = 0;
+          updateScore();
+          freezeQuiz = true;
+          setTimeout(nextQuestion, 1500);
+        }
+      } else if (phase === "boss") {
+        for (let i = 0; i < bullets.length; i++) {
+          let bullet = bullets[i];
+          if (isCollidingBoss(bullet, boss)) {
+            bullets.splice(i, 1); i--;
+            boss.health--;
+            player.ammo--;
+            updateScore();
+            if (screenAnimations !== "Off") screenShake = 10;
+            if (boss.health <= 0) {
+              boss = null;
+              phase = "quiz";
+              correctAnswersCount = 0;
+              currentQuestionIndex++;
+              if (currentQuestionIndex < questions.length) {
+                currentQuestion = questions[currentQuestionIndex];
+                document.getElementById('questionBox').textContent = currentQuestion.question;
+                spawnAnswerBalls();
+                questionTimer = 10.0;
+                freezeQuiz = false;
+                player.x = canvas.width / 2 - player.width / 2;
+              } else {
+                gameOver = true;
+              }
+            }
+            return;
+          }
+        }
+        for (let i = 0; i < bossBullets.length; i++) {
+          let bullet = bossBullets[i];
+          if (isCollidingPlayer(bullet, player)) {
+            bossBullets.splice(i, 1); i--;
+            if (!player.invulnerable) {
+              player.health--;
+              player.invulnerable = true;
+              player.invulnTimer = 2.0;
+              if (player.health <= 0) { gameOver = true; }
+            }
+            return;
+          }
+        }
+        if (player.ammo <= 0) { gameOver = true; }
+      }
+    }
+    
+    function updateScore() {
+      if (phase === "quiz") {
+        document.getElementById('scoreBox').textContent = "Score: " + score;
+      } else {
+        document.getElementById('scoreBox').textContent = "Bullets: " + player.ammo;
+      }
+    }
+    
+    function triggerConfetti() {
+      if (screenAnimations === "Off") return;
+      let numParticles = 50;
+      if (graphicsQuality === "Fast") numParticles = 10;
+      else if (graphicsQuality === "Fancy") numParticles = 50;
+      else if (graphicsQuality === "Fabulous") numParticles = 100;
+      for (let i = 0; i < numParticles; i++) {
+        confettiParticles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height / 2,
+          radius: Math.random() * 3 + 2,
+          color: currentTheme.confettiColors[Math.floor(Math.random() * currentTheme.confettiColors.length)],
+          speedY: Math.random() * 3 + 2,
+          angle: Math.random() * Math.PI * 2
+        });
+      }
+    }
+    function updateConfetti() {
+      confettiParticles.forEach((p, index) => {
+        p.y += p.speedY;
+        p.angle += 0.1;
+        if (p.y > canvas.height) { confettiParticles.splice(index, 1); }
+      });
+    }
+    function drawConfetti() {
+      confettiParticles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+      });
+    }
+    
+    function triggerFlash() { if(screenAnimations !== "Off") flashAlpha = 0.5; }
+    
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        currentQuestion = questions[currentQuestionIndex];
+        document.getElementById('questionBox').textContent = currentQuestion.question;
+        spawnAnswerBalls();
+        questionTimer = 10.0;
+        freezeQuiz = false;
+        player.x = canvas.width / 2 - player.width / 2;
+      } else {
+        gameOver = true;
+      }
+    }
+    
+    function spawnBoss() {
+      balls.length = 0;
+      boss = {
+        x: 20,
+        baseX: 20,
+        y: 60,
+        width: 40,
+        height: 40,
+        color: 'red',
+        health: 6,
+        shootTimer: 2.0,
+        amplitude: 50,
+        frequency: 1
+      };
+      bossIntroTimer = 2.0;
+    }
+    
+    function updateBossPhase(dt) {
+      updateBoss(dt);
+      if (bossIntroTimer > 0) { bossIntroTimer -= dt; }
+    }
+    
+    function updateScreenShake() { if (screenShake > 0 && screenAnimations !== "Off") { screenShake -= 0.5; if (screenShake < 0) screenShake = 0; } else { screenShake = 0; } }
+    
+    /* ========= Main Game Loop ========= */
+    function gameLoop() {
+      let dt = 0.016;
+      globalTime += dt;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      if (screenShake > 0 && screenAnimations !== "Off") {
+        let shakeX = (Math.random() - 0.5) * screenShake;
+        let shakeY = (Math.random() - 0.5) * screenShake;
+        ctx.save();
+        ctx.translate(shakeX, shakeY);
+      }
+      
+      updatePlayer();
+      updateBullets();
+      if (phase === "quiz") {
+        if (!freezeQuiz) { questionTimer -= dt; }
+        if (!freezeQuiz) { document.getElementById('questionBox').textContent = currentQuestion.question; }
+        else { document.getElementById('questionBox').textContent = ""; }
+        if (screenAnimations !== "Off") drawTimeBar();
+        updateBalls();
+      } else if (phase === "boss") {
+        document.getElementById('questionBox').textContent = "";
+        updateBossPhase(dt);
+      }
+      updateConfetti();
+      updateFlash();
+      updateScreenShake();
+      checkCollisions();
+      
+      if (phase === "quiz") { drawBalls(); }
+      else if (phase === "boss") { drawBoss(); drawHUDBoss(); drawBossIntro(); }
+      drawPlayer();
+      drawBullets();
+      drawConfetti();
+      drawFlash();
+      
+      if (screenShake > 0 && screenAnimations !== "Off") { ctx.restore(); }
+      
+      if (!gameOver) { gameLoopId = requestAnimationFrame(gameLoop); }
+      else { showGameOver(); }
+    }
+    
+    /* ========= Collision Handling ========= */
+    function isCollidingQuiz(bullet, ball) {
+      let bulletCenterX = bullet.x + bullet.width / 2;
+      let bulletCenterY = bullet.y + bullet.height / 2;
+      let dx = ball.x - bulletCenterX;
+      let dy = ball.y - bulletCenterY;
+      let distance = Math.sqrt(dx * dx + dy * dy);
+      return distance < ball.radius + Math.max(bullet.width, bullet.height) / 2;
+    }
+    function isCollidingBoss(bullet, boss) {
+      return (
+        bullet.x < boss.x + boss.width &&
+        bullet.x + bullet.width > boss.x &&
+        bullet.y < boss.y + boss.height &&
+        bullet.y + bullet.height > boss.y
+      );
+    }
+    function isCollidingPlayer(bullet, player) {
+      return (
+        bullet.x < player.x + player.width &&
+        bullet.x + bullet.width > player.x &&
+        bullet.y < player.y + player.height &&
+        bullet.y + bullet.height > player.y
+      );
+    }
+    function checkCollisions() {
+      if (phase === "quiz") {
+        for (let i = 0; i < bullets.length; i++) {
+          let bullet = bullets[i];
+          for (let j = 0; j < balls.length; j++) {
+            let ball = balls[j];
+            if (isCollidingQuiz(bullet, ball) && !ball.hit) {
+              bullets.splice(i, 1); i--;
+              ball.hit = true;
+              if (ball.answer === currentQuestion.correct) {
+                score += 10;
+                correctAnswersCount++;
+                updateScore();
+                if (screenAnimations !== "Off") triggerConfetti();
+                if (screenAnimations !== "Off") screenShake = 10;
+                freezeQuiz = true;
+                balls.splice(j, 1);
+                setTimeout(nextQuestion, 1500);
+              } else {
+                score -= 5;
+                if (score < 0) score = 0;
+                updateScore();
+                if (screenAnimations !== "Off") triggerFlash();
+                balls.splice(j, 1);
+              }
+              return;
+            }
+          }
+        }
+        if (questionTimer <= 0 && !freezeQuiz) {
+          score -= 10;
+          if (score < 0) score = 0;
+          updateScore();
+          freezeQuiz = true;
+          setTimeout(nextQuestion, 1500);
+        }
+      } else if (phase === "boss") {
+        for (let i = 0; i < bullets.length; i++) {
+          let bullet = bullets[i];
+          if (isCollidingBoss(bullet, boss)) {
+            bullets.splice(i, 1); i--;
+            boss.health--;
+            player.ammo--;
+            updateScore();
+            if (screenAnimations !== "Off") screenShake = 10;
+            if (boss.health <= 0) {
+              boss = null;
+              phase = "quiz";
+              correctAnswersCount = 0;
+              currentQuestionIndex++;
+              if (currentQuestionIndex < questions.length) {
+                currentQuestion = questions[currentQuestionIndex];
+                document.getElementById('questionBox').textContent = currentQuestion.question;
+                spawnAnswerBalls();
+                questionTimer = 10.0;
+                freezeQuiz = false;
+                player.x = canvas.width / 2 - player.width / 2;
+              } else {
+                gameOver = true;
+              }
+            }
+            return;
+          }
+        }
+        for (let i = 0; i < bossBullets.length; i++) {
+          let bullet = bossBullets[i];
+          if (isCollidingPlayer(bullet, player)) {
+            bossBullets.splice(i, 1); i--;
+            if (!player.invulnerable) {
+              player.health--;
+              player.invulnerable = true;
+              player.invulnTimer = 2.0;
+              if (player.health <= 0) { gameOver = true; }
+            }
+            return;
+          }
+        }
+        if (player.ammo <= 0) { gameOver = true; }
+      }
+    }
+    
+    function updateScore() {
+      if (phase === "quiz") {
+        document.getElementById('scoreBox').textContent = "Score: " + score;
+      } else {
+        document.getElementById('scoreBox').textContent = "Bullets: " + player.ammo;
+      }
+    }
+    
+    function triggerConfetti() {
+      if (screenAnimations === "Off") return;
+      let numParticles = 50;
+      if (graphicsQuality === "Fast") numParticles = 10;
+      else if (graphicsQuality === "Fancy") numParticles = 50;
+      else if (graphicsQuality === "Fabulous") numParticles = 100;
+      for (let i = 0; i < numParticles; i++) {
+        confettiParticles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height / 2,
+          radius: Math.random() * 3 + 2,
+          color: currentTheme.confettiColors[Math.floor(Math.random() * currentTheme.confettiColors.length)],
+          speedY: Math.random() * 3 + 2,
+          angle: Math.random() * Math.PI * 2
+        });
+      }
+    }
+    function updateConfetti() {
+      confettiParticles.forEach((p, index) => {
+        p.y += p.speedY;
+        p.angle += 0.1;
+        if (p.y > canvas.height) { confettiParticles.splice(index, 1); }
+      });
+    }
+    function drawConfetti() {
+      confettiParticles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+      });
+    }
+    
+    function triggerFlash() { if(screenAnimations !== "Off") flashAlpha = 0.5; }
+    
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        currentQuestion = questions[currentQuestionIndex];
+        document.getElementById('questionBox').textContent = currentQuestion.question;
+        spawnAnswerBalls();
+        questionTimer = 10.0;
+        freezeQuiz = false;
+        player.x = canvas.width / 2 - player.width / 2;
+      } else { gameOver = true; }
+    }
+    
+    function spawnBoss() {
+      balls.length = 0;
+      boss = {
+        x: 20,
+        baseX: 20,
+        y: 60,
+        width: 40,
+        height: 40,
+        color: 'red',
+        health: 6,
+        shootTimer: 2.0,
+        amplitude: 50,
+        frequency: 1
+      };
+      bossIntroTimer = 2.0;
+    }
+    
+    function updateBossPhase(dt) {
+      updateBoss(dt);
+      if (bossIntroTimer > 0) { bossIntroTimer -= dt; }
+    }
+    
+    function updateScreenShake() { 
+      if (screenShake > 0 && screenAnimations !== "Off") {
+        screenShake -= 0.5;
+        if (screenShake < 0) screenShake = 0;
+      } else { screenShake = 0; }
+    }
+    
+    /* ========= Main Game Loop ========= */
+    function gameLoop() {
+      let dt = 0.016;
+      globalTime += dt;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      if (screenShake > 0 && screenAnimations !== "Off") {
+        let shakeX = (Math.random() - 0.5) * screenShake;
+        let shakeY = (Math.random() - 0.5) * screenShake;
+        ctx.save();
+        ctx.translate(shakeX, shakeY);
+      }
+      
+      updatePlayer();
+      updateBullets();
+      if (phase === "quiz") {
+        if (!freezeQuiz) { questionTimer -= dt; }
+        if (!freezeQuiz) { document.getElementById('questionBox').textContent = currentQuestion.question; }
+        else { document.getElementById('questionBox').textContent = ""; }
+        if (screenAnimations !== "Off") drawTimeBar();
+        updateBalls();
+      } else if (phase === "boss") {
+        document.getElementById('questionBox').textContent = "";
+        updateBossPhase(dt);
+      }
+      updateConfetti();
+      updateFlash();
+      updateScreenShake();
+      checkCollisions();
+      
+      if (phase === "quiz") { drawBalls(); }
+      else if (phase === "boss") { drawBoss(); drawHUDBoss(); drawBossIntro(); }
+      drawPlayer();
+      drawBullets();
+      drawConfetti();
+      drawFlash();
+      
+      if (screenShake > 0 && screenAnimations !== "Off") { ctx.restore(); }
+      
+      if (!gameOver) { gameLoopId = requestAnimationFrame(gameLoop); }
+      else { showGameOver(); }
+    }
+    
+    /* ========= Collision Handling ========= */
+    function isCollidingQuiz(bullet, ball) {
+      let bulletCenterX = bullet.x + bullet.width / 2;
+      let bulletCenterY = bullet.y + bullet.height / 2;
+      let dx = ball.x - bulletCenterX;
+      let dy = ball.y - bulletCenterY;
+      let distance = Math.sqrt(dx * dx + dy * dy);
+      return distance < ball.radius + Math.max(bullet.width, bullet.height) / 2;
+    }
+    function isCollidingBoss(bullet, boss) {
+      return (
+        bullet.x < boss.x + boss.width &&
+        bullet.x + bullet.width > boss.x &&
+        bullet.y < boss.y + boss.height &&
+        bullet.y + bullet.height > boss.y
+      );
+    }
+    function isCollidingPlayer(bullet, player) {
+      return (
+        bullet.x < player.x + player.width &&
+        bullet.x + bullet.width > player.x &&
+        bullet.y < player.y + player.height &&
+        bullet.y + bullet.height > player.y
+      );
+    }
+    function checkCollisions() {
+      if (phase === "quiz") {
+        for (let i = 0; i < bullets.length; i++) {
+          let bullet = bullets[i];
+          for (let j = 0; j < balls.length; j++) {
+            let ball = balls[j];
+            if (isCollidingQuiz(bullet, ball) && !ball.hit) {
+              bullets.splice(i, 1); i--;
+              ball.hit = true;
+              if (ball.answer === currentQuestion.correct) {
+                score += 10;
+                correctAnswersCount++;
+                updateScore();
+                if (screenAnimations !== "Off") triggerConfetti();
+                if (screenAnimations !== "Off") screenShake = 10;
+                freezeQuiz = true;
+                balls.splice(j, 1);
+                setTimeout(nextQuestion, 1500);
+              } else {
+                score -= 5;
+                if (score < 0) score = 0;
+                updateScore();
+                if (screenAnimations !== "Off") triggerFlash();
+                balls.splice(j, 1);
+              }
+              return;
+            }
+          }
+        }
+        if (questionTimer <= 0 && !freezeQuiz) {
+          score -= 10;
+          if (score < 0) score = 0;
+          updateScore();
+          freezeQuiz = true;
+          setTimeout(nextQuestion, 1500);
+        }
+      } else if (phase === "boss") {
+        for (let i = 0; i < bullets.length; i++) {
+          let bullet = bullets[i];
+          if (isCollidingBoss(bullet, boss)) {
+            bullets.splice(i, 1); i--;
+            boss.health--;
+            player.ammo--;
+            updateScore();
+            if (screenAnimations !== "Off") screenShake = 10;
+            if (boss.health <= 0) {
+              boss = null;
+              phase = "quiz";
+              correctAnswersCount = 0;
+              currentQuestionIndex++;
+              if (currentQuestionIndex < questions.length) {
+                currentQuestion = questions[currentQuestionIndex];
+                document.getElementById('questionBox').textContent = currentQuestion.question;
+                spawnAnswerBalls();
+                questionTimer = 10.0;
+                freezeQuiz = false;
+                player.x = canvas.width / 2 - player.width / 2;
+              } else { gameOver = true; }
+            }
+            return;
+          }
+        }
+        for (let i = 0; i < bossBullets.length; i++) {
+          let bullet = bossBullets[i];
+          if (isCollidingPlayer(bullet, player)) {
+            bossBullets.splice(i, 1); i--;
+            if (!player.invulnerable) {
+              player.health--;
+              player.invulnerable = true;
+              player.invulnTimer = 2.0;
+              if (player.health <= 0) { gameOver = true; }
+            }
+            return;
+          }
+        }
+        if (player.ammo <= 0) { gameOver = true; }
+      }
+    }
+    
+    function updateScore() {
+      if (phase === "quiz") {
+        document.getElementById('scoreBox').textContent = "Score: " + score;
+      } else {
+        document.getElementById('scoreBox').textContent = "Bullets: " + player.ammo;
+      }
+    }
+    
+    function triggerConfetti() {
+      if (screenAnimations === "Off") return;
+      let numParticles = 50;
+      if (graphicsQuality === "Fast") numParticles = 10;
+      else if (graphicsQuality === "Fancy") numParticles = 50;
+      else if (graphicsQuality === "Fabulous") numParticles = 100;
+      for (let i = 0; i < numParticles; i++) {
+        confettiParticles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height / 2,
+          radius: Math.random() * 3 + 2,
+          color: currentTheme.confettiColors[Math.floor(Math.random() * currentTheme.confettiColors.length)],
+          speedY: Math.random() * 3 + 2,
+          angle: Math.random() * Math.PI * 2
+        });
+      }
+    }
+    function updateConfetti() {
+      confettiParticles.forEach((p, index) => {
+        p.y += p.speedY;
+        p.angle += 0.1;
+        if (p.y > canvas.height) { confettiParticles.splice(index, 1); }
+      });
+    }
+    function drawConfetti() {
+      confettiParticles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+      });
+    }
+    
+    function triggerFlash() { if(screenAnimations !== "Off") flashAlpha = 0.5; }
+    
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        currentQuestion = questions[currentQuestionIndex];
+        document.getElementById('questionBox').textContent = currentQuestion.question;
+        spawnAnswerBalls();
+        questionTimer = 10.0;
+        freezeQuiz = false;
+        player.x = canvas.width / 2 - player.width / 2;
+      } else { gameOver = true; }
+    }
+    
+    function spawnBoss() {
+      balls.length = 0;
+      boss = {
+        x: 20,
+        baseX: 20,
+        y: 60,
+        width: 40,
+        height: 40,
+        color: 'red',
+        health: 6,
+        shootTimer: 2.0,
+        amplitude: 50,
+        frequency: 1
+      };
+      bossIntroTimer = 2.0;
+    }
+    
+    function updateBossPhase(dt) {
+      updateBoss(dt);
+      if (bossIntroTimer > 0) { bossIntroTimer -= dt; }
+    }
+    
+    function updateScreenShake() {
+      if (screenShake > 0 && screenAnimations !== "Off") {
+        screenShake -= 0.5;
+        if (screenShake < 0) screenShake = 0;
+      } else { screenShake = 0; }
+    }
+    
+    /* ========= Main Game Loop ========= */
+    function gameLoop() {
+      let dt = 0.016;
+      globalTime += dt;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      if (screenShake > 0 && screenAnimations !== "Off") {
+        let shakeX = (Math.random() - 0.5) * screenShake;
+        let shakeY = (Math.random() - 0.5) * screenShake;
+        ctx.save();
+        ctx.translate(shakeX, shakeY);
+      }
+      
+      updatePlayer();
+      updateBullets();
+      if (phase === "quiz") {
+        if (!freezeQuiz) { questionTimer -= dt; }
+        if (!freezeQuiz) { document.getElementById('questionBox').textContent = currentQuestion.question; }
+        else { document.getElementById('questionBox').textContent = ""; }
+        if (screenAnimations !== "Off") drawTimeBar();
+        updateBalls();
+      } else if (phase === "boss") {
+        document.getElementById('questionBox').textContent = "";
+        updateBossPhase(dt);
+      }
+      updateConfetti();
+      updateFlash();
+      updateScreenShake();
+      checkCollisions();
+      
+      if (phase === "quiz") { drawBalls(); }
+      else if (phase === "boss") { drawBoss(); drawHUDBoss(); drawBossIntro(); }
+      drawPlayer();
+      drawBullets();
+      drawConfetti();
+      drawFlash();
+      
+      if (screenShake > 0 && screenAnimations !== "Off") { ctx.restore(); }
+      
+      if (!gameOver) { gameLoopId = requestAnimationFrame(gameLoop); }
+      else { showGameOver(); }
+    }
+    
+    /* ========= Collision Handling ========= */
+    function isCollidingQuiz(bullet, ball) {
+      let bulletCenterX = bullet.x + bullet.width / 2;
+      let bulletCenterY = bullet.y + bullet.height / 2;
+      let dx = ball.x - bulletCenterX;
+      let dy = ball.y - bulletCenterY;
+      let distance = Math.sqrt(dx * dx + dy * dy);
+      return distance < ball.radius + Math.max(bullet.width, bullet.height) / 2;
+    }
+    function isCollidingBoss(bullet, boss) {
+      return (
+        bullet.x < boss.x + boss.width &&
+        bullet.x + bullet.width > boss.x &&
+        bullet.y < boss.y + boss.height &&
+        bullet.y + bullet.height > boss.y
+      );
+    }
+    function isCollidingPlayer(bullet, player) {
+      return (
+        bullet.x < player.x + player.width &&
+        bullet.x + bullet.width > player.x &&
+        bullet.y < player.y + player.height &&
+        bullet.y + bullet.height > player.y
+      );
+    }
+    function checkCollisions() {
+      if (phase === "quiz") {
+        for (let i = 0; i < bullets.length; i++) {
+          let bullet = bullets[i];
+          for (let j = 0; j < balls.length; j++) {
+            let ball = balls[j];
+            if (isCollidingQuiz(bullet, ball) && !ball.hit) {
+              bullets.splice(i, 1); i--;
+              ball.hit = true;
+              if (ball.answer === currentQuestion.correct) {
+                score += 10;
+                correctAnswersCount++;
+                updateScore();
+                if (screenAnimations !== "Off") triggerConfetti();
+                if (screenAnimations !== "Off") screenShake = 10;
+                freezeQuiz = true;
+                balls.splice(j, 1);
+                setTimeout(nextQuestion, 1500);
+              } else {
+                score -= 5;
+                if (score < 0) score = 0;
+                updateScore();
+                if (screenAnimations !== "Off") triggerFlash();
+                balls.splice(j, 1);
+              }
+              return;
+            }
+          }
+        }
+        if (questionTimer <= 0 && !freezeQuiz) {
+          score -= 10;
+          if (score < 0) score = 0;
+          updateScore();
+          freezeQuiz = true;
+          setTimeout(nextQuestion, 1500);
+        }
+      } else if (phase === "boss") {
+        for (let i = 0; i < bullets.length; i++) {
+          let bullet = bullets[i];
+          if (isCollidingBoss(bullet, boss)) {
+            bullets.splice(i, 1); i--;
+            boss.health--;
+            player.ammo--;
+            updateScore();
+            if (screenAnimations !== "Off") screenShake = 10;
+            if (boss.health <= 0) {
+              boss = null;
+              phase = "quiz";
+              correctAnswersCount = 0;
+              currentQuestionIndex++;
+              if (currentQuestionIndex < questions.length) {
+                currentQuestion = questions[currentQuestionIndex];
+                document.getElementById('questionBox').textContent = currentQuestion.question;
+                spawnAnswerBalls();
+                questionTimer = 10.0;
+                freezeQuiz = false;
+                player.x = canvas.width / 2 - player.width / 2;
+              } else { gameOver = true; }
+            }
+            return;
+          }
+        }
+        for (let i = 0; i < bossBullets.length; i++) {
+          let bullet = bossBullets[i];
+          if (isCollidingPlayer(bullet, player)) {
+            bossBullets.splice(i, 1); i--;
+            if (!player.invulnerable) {
+              player.health--;
+              player.invulnerable = true;
+              player.invulnTimer = 2.0;
+              if (player.health <= 0) { gameOver = true; }
+            }
+            return;
+          }
+        }
+        if (player.ammo <= 0) { gameOver = true; }
+      }
+    }
+    
+    function updateScore() {
+      if (phase === "quiz") {
+        document.getElementById('scoreBox').textContent = "Score: " + score;
+      } else {
+        document.getElementById('scoreBox').textContent = "Bullets: " + player.ammo;
+      }
+    }
+    
+    function triggerConfetti() {
+      if (screenAnimations === "Off") return;
+      let numParticles = 50;
+      if (graphicsQuality === "Fast") numParticles = 10;
+      else if (graphicsQuality === "Fancy") numParticles = 50;
+      else if (graphicsQuality === "Fabulous") numParticles = 100;
+      for (let i = 0; i < numParticles; i++) {
+        confettiParticles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height / 2,
+          radius: Math.random() * 3 + 2,
+          color: currentTheme.confettiColors[Math.floor(Math.random() * currentTheme.confettiColors.length)],
+          speedY: Math.random() * 3 + 2,
+          angle: Math.random() * Math.PI * 2
+        });
+      }
+    }
+    function updateConfetti() {
+      confettiParticles.forEach((p, index) => {
+        p.y += p.speedY;
+        p.angle += 0.1;
+        if (p.y > canvas.height) { confettiParticles.splice(index, 1); }
+      });
+    }
+    function drawConfetti() {
+      confettiParticles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+      });
+    }
+    
+    function triggerFlash() { if(screenAnimations !== "Off") flashAlpha = 0.5; }
+    
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        currentQuestion = questions[currentQuestionIndex];
+        document.getElementById('questionBox').textContent = currentQuestion.question;
+        spawnAnswerBalls();
+        questionTimer = 10.0;
+        freezeQuiz = false;
+        player.x = canvas.width / 2 - player.width / 2;
+      } else { gameOver = true; }
+    }
+    
+    function spawnBoss() {
+      balls.length = 0;
+      boss = {
+        x: 20,
+        baseX: 20,
+        y: 60,
+        width: 40,
+        height: 40,
+        color: 'red',
+        health: 6,
+        shootTimer: 2.0,
+        amplitude: 50,
+        frequency: 1
+      };
+      bossIntroTimer = 2.0;
+    }
+    
+    function updateBossPhase(dt) {
+      updateBoss(dt);
+      if (bossIntroTimer > 0) { bossIntroTimer -= dt; }
+    }
+    
+    function updateScreenShake() {
+      if (screenShake > 0 && screenAnimations !== "Off") {
+        screenShake -= 0.5;
+        if (screenShake < 0) screenShake = 0;
+      } else { screenShake = 0; }
+    }
+    
+    /* ========= Main Game Loop ========= */
+    function gameLoop() {
+      let dt = 0.016;
+      globalTime += dt;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      if (screenShake > 0 && screenAnimations !== "Off") {
+        let shakeX = (Math.random() - 0.5) * screenShake;
+        let shakeY = (Math.random() - 0.5) * screenShake;
+        ctx.save();
+        ctx.translate(shakeX, shakeY);
+      }
+      
+      updatePlayer();
+      updateBullets();
+      if (phase === "quiz") {
+        if (!freezeQuiz) { questionTimer -= dt; }
+        if (!freezeQuiz) { document.getElementById('questionBox').textContent = currentQuestion.question; }
+        else { document.getElementById('questionBox').textContent = ""; }
+        if (screenAnimations !== "Off") drawTimeBar();
+        updateBalls();
+      } else if (phase === "boss") {
+        document.getElementById('questionBox').textContent = "";
+        updateBossPhase(dt);
+      }
+      updateConfetti();
+      updateFlash();
+      updateScreenShake();
+      checkCollisions();
+      
+      if (phase === "quiz") { drawBalls(); }
+      else if (phase === "boss") { drawBoss(); drawHUDBoss(); drawBossIntro(); }
+      drawPlayer();
+      drawBullets();
+      drawConfetti();
+      drawFlash();
+      
+      if (screenShake > 0 && screenAnimations !== "Off") { ctx.restore(); }
+      
+      if (!gameOver) { gameLoopId = requestAnimationFrame(gameLoop); }
+      else { showGameOver(); }
+    }
+    
+    /* ========= Collision Handling ========= */
+    function isCollidingQuiz(bullet, ball) {
+      let bulletCenterX = bullet.x + bullet.width / 2;
+      let bulletCenterY = bullet.y + bullet.height / 2;
+      let dx = ball.x - bulletCenterX;
+      let dy = ball.y - bulletCenterY;
+      let distance = Math.sqrt(dx * dx + dy * dy);
+      return distance < ball.radius + Math.max(bullet.width, bullet.height) / 2;
+    }
+    function isCollidingBoss(bullet, boss) {
+      return (
+        bullet.x < boss.x + boss.width &&
+        bullet.x + bullet.width > boss.x &&
+        bullet.y < boss.y + boss.height &&
+        bullet.y + bullet.height > boss.y
+      );
+    }
+    function isCollidingPlayer(bullet, player) {
+      return (
+        bullet.x < player.x + player.width &&
+        bullet.x + bullet.width > player.x &&
+        bullet.y < player.y + player.height &&
+        bullet.y + bullet.height > player.y
+      );
+    }
+    function checkCollisions() {
+      if (phase === "quiz") {
+        for (let i = 0; i < bullets.length; i++) {
+          let bullet = bullets[i];
+          for (let j = 0; j < balls.length; j++) {
+            let ball = balls[j];
+            if (isCollidingQuiz(bullet, ball) && !ball.hit) {
+              bullets.splice(i, 1); i--;
+              ball.hit = true;
+              if (ball.answer === currentQuestion.correct) {
+                score += 10;
+                correctAnswersCount++;
+                updateScore();
+                if (screenAnimations !== "Off") triggerConfetti();
+                if (screenAnimations !== "Off") screenShake = 10;
+                freezeQuiz = true;
+                balls.splice(j, 1);
+                setTimeout(nextQuestion, 1500);
+              } else {
+                score -= 5;
+                if (score < 0) score = 0;
+                updateScore();
+                if (screenAnimations !== "Off") triggerFlash();
+                balls.splice(j, 1);
+              }
+              return;
+            }
+          }
+        }
+        if (questionTimer <= 0 && !freezeQuiz) {
+          score -= 10;
+          if (score < 0) score = 0;
+          updateScore();
+          freezeQuiz = true;
+          setTimeout(nextQuestion, 1500);
+        }
+      } else if (phase === "boss") {
+        for (let i = 0; i < bullets.length; i++) {
+          let bullet = bullets[i];
+          if (isCollidingBoss(bullet, boss)) {
+            bullets.splice(i, 1); i--;
+            boss.health--;
+            player.ammo--;
+            updateScore();
+            if (screenAnimations !== "Off") screenShake = 10;
+            if (boss.health <= 0) {
+              boss = null;
+              phase = "quiz";
+              correctAnswersCount = 0;
+              currentQuestionIndex++;
+              if (currentQuestionIndex < questions.length) {
+                currentQuestion = questions[currentQuestionIndex];
+                document.getElementById('questionBox').textContent = currentQuestion.question;
+                spawnAnswerBalls();
+                questionTimer = 10.0;
+                freezeQuiz = false;
+                player.x = canvas.width / 2 - player.width / 2;
+              } else { gameOver = true; }
+            }
+            return;
+          }
+        }
+        for (let i = 0; i < bossBullets.length; i++) {
+          let bullet = bossBullets[i];
+          if (isCollidingPlayer(bullet, player)) {
+            bossBullets.splice(i, 1); i--;
+            if (!player.invulnerable) {
+              player.health--;
+              player.invulnerable = true;
+              player.invulnTimer = 2.0;
+              if (player.health <= 0) { gameOver = true; }
+            }
+            return;
+          }
+        }
+        if (player.ammo <= 0) { gameOver = true; }
+      }
+    }
+    
+    function updateScore() {
+      if (phase === "quiz") {
+        document.getElementById('scoreBox').textContent = "Score: " + score;
+      } else {
+        document.getElementById('scoreBox').textContent = "Bullets: " + player.ammo;
+      }
+    }
+    
+    function triggerConfetti() {
+      if (screenAnimations === "Off") return;
+      let numParticles = 50;
+      if (graphicsQuality === "Fast") numParticles = 10;
+      else if (graphicsQuality === "Fancy") numParticles = 50;
+      else if (graphicsQuality === "Fabulous") numParticles = 100;
+      for (let i = 0; i < numParticles; i++) {
+        confettiParticles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height / 2,
+          radius: Math.random() * 3 + 2,
+          color: currentTheme.confettiColors[Math.floor(Math.random() * currentTheme.confettiColors.length)],
+          speedY: Math.random() * 3 + 2,
+          angle: Math.random() * Math.PI * 2
+        });
+      }
+    }
+    function updateConfetti() {
+      confettiParticles.forEach((p, index) => {
+        p.y += p.speedY;
+        p.angle += 0.1;
+        if (p.y > canvas.height) { confettiParticles.splice(index, 1); }
+      });
+    }
+    function drawConfetti() {
+      confettiParticles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+      });
+    }
+    
+    function triggerFlash() { if(screenAnimations !== "Off") flashAlpha = 0.5; }
+    
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        currentQuestion = questions[currentQuestionIndex];
+        document.getElementById('questionBox').textContent = currentQuestion.question;
+        spawnAnswerBalls();
+        questionTimer = 10.0;
+        freezeQuiz = false;
+        player.x = canvas.width / 2 - player.width / 2;
+      } else { gameOver = true; }
+    }
+    
+    function spawnBoss() {
+      balls.length = 0;
+      boss = {
+        x: 20,
+        baseX: 20,
+        y: 60,
+        width: 40,
+        height: 40,
+        color: 'red',
+        health: 6,
+        shootTimer: 2.0,
+        amplitude: 50,
+        frequency: 1
+      };
+      bossIntroTimer = 2.0;
+    }
+    
+    function updateBossPhase(dt) {
+      updateBoss(dt);
+      if (bossIntroTimer > 0) { bossIntroTimer -= dt; }
+    }
+    
+    function updateScreenShake() {
+      if (screenShake > 0 && screenAnimations !== "Off") {
+        screenShake -= 0.5;
+        if (screenShake < 0) screenShake = 0;
+      } else { screenShake = 0; }
+    }
+    
+    /* ========= Main Game Loop ========= */
+    function gameLoop() {
+      let dt = 0.016;
+      globalTime += dt;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      if (screenShake > 0 && screenAnimations !== "Off") {
+        let shakeX = (Math.random() - 0.5) * screenShake;
+        let shakeY = (Math.random() - 0.5) * screenShake;
+        ctx.save();
+        ctx.translate(shakeX, shakeY);
+      }
+      
+      updatePlayer();
+      updateBullets();
+      if (phase === "quiz") {
+        if (!freezeQuiz) { questionTimer -= dt; }
+        if (!freezeQuiz) { document.getElementById('questionBox').textContent = currentQuestion.question; }
+        else { document.getElementById('questionBox').textContent = ""; }
+        if (screenAnimations !== "Off") drawTimeBar();
+        updateBalls();
+      } else if (phase === "boss") {
+        document.getElementById('questionBox').textContent = "";
+        updateBossPhase(dt);
+      }
+      updateConfetti();
+      updateFlash();
+      updateScreenShake();
+      checkCollisions();
+      
+      if (phase === "quiz") { drawBalls(); }
+      else if (phase === "boss") { drawBoss(); drawHUDBoss(); drawBossIntro(); }
+      drawPlayer();
+      drawBullets();
+      drawConfetti();
+      drawFlash();
+      
+      if (screenShake > 0 && screenAnimations !== "Off") { ctx.restore(); }
+      
+      if (!gameOver) { gameLoopId = requestAnimationFrame(gameLoop); }
+      else { showGameOver(); }
+    }
+    
+    /* ========= Collision Handling ========= */
+    function isCollidingQuiz(bullet, ball) {
+      let bulletCenterX = bullet.x + bullet.width / 2;
+      let bulletCenterY = bullet.y + bullet.height / 2;
+      let dx = ball.x - bulletCenterX;
+      let dy = ball.y - bulletCenterY;
+      let distance = Math.sqrt(dx * dx + dy * dy);
+      return distance < ball.radius + Math.max(bullet.width, bullet.height) / 2;
+    }
+    function isCollidingBoss(bullet, boss) {
+      return (
+        bullet.x < boss.x + boss.width &&
+        bullet.x + bullet.width > boss.x &&
+        bullet.y < boss.y + boss.height &&
+        bullet.y + bullet.height > boss.y
+      );
+    }
+    function isCollidingPlayer(bullet, player) {
+      return (
+        bullet.x < player.x + player.width &&
+        bullet.x + bullet.width > player.x &&
+        bullet.y < player.y + player.height &&
+        bullet.y + bullet.height > player.y
+      );
+    }
+    function checkCollisions() {
+      if (phase === "quiz") {
+        for (let i = 0; i < bullets.length; i++) {
+          let bullet = bullets[i];
+          for (let j = 0; j < balls.length; j++) {
+            let ball = balls[j];
+            if (isCollidingQuiz(bullet, ball) && !ball.hit) {
+              bullets.splice(i, 1); i--;
+              ball.hit = true;
+              if (ball.answer === currentQuestion.correct) {
+                score += 10;
+                correctAnswersCount++;
+                updateScore();
+                if (screenAnimations !== "Off") triggerConfetti();
+                if (screenAnimations !== "Off") screenShake = 10;
+                freezeQuiz = true;
+                balls.splice(j, 1);
+                setTimeout(nextQuestion, 1500);
+              } else {
+                score -= 5;
+                if (score < 0) score = 0;
+                updateScore();
+                if (screenAnimations !== "Off") triggerFlash();
+                balls.splice(j, 1);
+              }
+              return;
+            }
+          }
+        }
+        if (questionTimer <= 0 && !freezeQuiz) {
+          score -= 10;
+          if (score < 0) score = 0;
+          updateScore();
+          freezeQuiz = true;
+          setTimeout(nextQuestion, 1500);
+        }
+      } else if (phase === "boss") {
+        for (let i = 0; i < bullets.length; i++) {
+          let bullet = bullets[i];
+          if (isCollidingBoss(bullet, boss)) {
+            bullets.splice(i, 1); i--;
+            boss.health--;
+            player.ammo--;
+            updateScore();
+            if (screenAnimations !== "Off") screenShake = 10;
+            if (boss.health <= 0) {
+              boss = null;
+              phase = "quiz";
+              correctAnswersCount = 0;
+              currentQuestionIndex++;
+              if (currentQuestionIndex < questions.length) {
+                currentQuestion = questions[currentQuestionIndex];
+                document.getElementById('questionBox').textContent = currentQuestion.question;
+                spawnAnswerBalls();
+                questionTimer = 10.0;
+                freezeQuiz = false;
+                player.x = canvas.width / 2 - player.width / 2;
+              } else { gameOver = true; }
+            }
+            return;
+          }
+        }
+        for (let i = 0; i < bossBullets.length; i++) {
+          let bullet = bossBullets[i];
+          if (isCollidingPlayer(bullet, player)) {
+            bossBullets.splice(i, 1); i--;
+            if (!player.invulnerable) {
+              player.health--;
+              player.invulnerable = true;
+              player.invulnTimer = 2.0;
+              if (player.health <= 0) { gameOver = true; }
+            }
+            return;
+          }
+        }
+        if (player.ammo <= 0) { gameOver = true; }
+      }
+    }
+    
+    function updateScore() {
+      if (phase === "quiz") {
+        document.getElementById('scoreBox').textContent = "Score: " + score;
+      } else {
+        document.getElementById('scoreBox').textContent = "Bullets: " + player.ammo;
+      }
+    }
+    
+    function triggerConfetti() {
+      if (screenAnimations === "Off") return;
+      let numParticles = 50;
+      if (graphicsQuality === "Fast") numParticles = 10;
+      else if (graphicsQuality === "Fancy") numParticles = 50;
+      else if (graphicsQuality === "Fabulous") numParticles = 100;
+      for (let i = 0; i < numParticles; i++) {
+        confettiParticles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height / 2,
+          radius: Math.random() * 3 + 2,
+          color: currentTheme.confettiColors[Math.floor(Math.random() * currentTheme.confettiColors.length)],
+          speedY: Math.random() * 3 + 2,
+          angle: Math.random() * Math.PI * 2
+        });
+      }
+    }
+    function updateConfetti() {
+      confettiParticles.forEach((p, index) => {
+        p.y += p.speedY;
+        p.angle += 0.1;
+        if (p.y > canvas.height) { confettiParticles.splice(index, 1); }
+      });
+    }
+    function drawConfetti() {
+      confettiParticles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+      });
+    }
+    
+    function triggerFlash() { if(screenAnimations !== "Off") flashAlpha = 0.5; }
+    
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        currentQuestion = questions[currentQuestionIndex];
+        document.getElementById('questionBox').textContent = currentQuestion.question;
+        spawnAnswerBalls();
+        questionTimer = 10.0;
+        freezeQuiz = false;
+        player.x = canvas.width / 2 - player.width / 2;
+      } else { gameOver = true; }
+    }
+    
+    function spawnBoss() {
+      balls.length = 0;
+      boss = {
+        x: 20,
+        baseX: 20,
+        y: 60,
+        width: 40,
+        height: 40,
+        color: 'red',
+        health: 6,
+        shootTimer: 2.0,
+        amplitude: 50,
+        frequency: 1
+      };
+      bossIntroTimer = 2.0;
+    }
+    
+    function updateBossPhase(dt) {
+      updateBoss(dt);
+      if (bossIntroTimer > 0) { bossIntroTimer -= dt; }
+    }
+    
+    function updateScreenShake() {
+      if (screenShake > 0 && screenAnimations !== "Off") {
+        screenShake -= 0.5;
+        if (screenShake < 0) screenShake = 0;
+      } else { screenShake = 0; }
+    }
+    
+    /* ========= Main Game Loop ========= */
+    function gameLoop() {
+      let dt = 0.016;
+      globalTime += dt;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      if (screenShake > 0 && screenAnimations !== "Off") {
+        let shakeX = (Math.random() - 0.5) * screenShake;
+        let shakeY = (Math.random() - 0.5) * screenShake;
+        ctx.save();
+        ctx.translate(shakeX, shakeY);
+      }
+      
+      updatePlayer();
+      updateBullets();
+      if (phase === "quiz") {
+        if (!freezeQuiz) { questionTimer -= dt; }
+        if (!freezeQuiz) { document.getElementById('questionBox').textContent = currentQuestion.question; }
+        else { document.getElementById('questionBox').textContent = ""; }
+        if (screenAnimations !== "Off") drawTimeBar();
+        updateBalls();
+      } else if (phase === "boss") {
+        document.getElementById('questionBox').textContent = "";
+        updateBossPhase(dt);
+      }
+      updateConfetti();
+      updateFlash();
+      updateScreenShake();
+      checkCollisions();
+      
+      if (phase === "quiz") { drawBalls(); }
+      else if (phase === "boss") { drawBoss(); drawHUDBoss(); drawBossIntro(); }
+      drawPlayer();
+      drawBullets();
+      drawConfetti();
+      drawFlash();
+      
+      if (screenShake > 0 && screenAnimations !== "Off") { ctx.restore(); }
+      
+      if (!gameOver) { gameLoopId = requestAnimationFrame(gameLoop); }
+      else { showGameOver(); }
+    }
+    
+    /* ========= Game Over and Return to Menu ========= */
+    function showGameOver() {
+      const gameOverScreen = document.getElementById('gameOverScreen');
+      const gameOverText = document.getElementById('gameOverText');
+      const finalScoreText = document.getElementById('finalScoreText');
+      gameOverScreen.style.display = 'flex';
+      if (phase === "boss" && boss && boss.health <= 0) {
+        gameOverText.textContent = "You Win!";
+      } else if (phase === "quiz" && currentQuestionIndex >= questions.length) {
+        gameOverText.textContent = "Winner (i guess)";
+      } else {
+        gameOverText.textContent = "Game Over!";
+      }
+      finalScoreText.textContent = "Score: " + score;
+    }
+    function returnToMenu() {
+      running = false;
+      cancelAnimationFrame(gameLoopId);
+      bullets.length = 0;
+      bossBullets.length = 0;
+      confettiParticles.length = 0;
+      balls.length = 0;
+      boss = null;
+      document.getElementById('gameOverScreen').style.display = 'none';
+      document.getElementById('questionBox').textContent = "";
+      document.getElementById('scoreBox').textContent = "";
+      document.getElementById('timeBarContainer').textContent = "";
+      phase = "quiz"; score = 0; correctAnswersCount = 0; gameOver = false;
+      document.getElementById('menuScreen').classList.add('active');
+    }
+    
+    /* ========= Input: Shoot on Spacebar ========= */
+    document.addEventListener('keydown', e => {
+      if ((e.key === ' ' || e.key === 'Spacebar') && !gameOver) {
+        if (phase === "quiz") {
+          bullets.push({
+            x: player.x + player.width / 2 - 5,
+            y: player.y - 15,
+            width: 10,
+            height: 20,
+            speed: 8,
+            owner: "player"
+          });
+        } else if (phase === "boss") {
+          if (player.ammo > 0) {
+            bullets.push({
+              x: player.x + player.width / 2 - 5,
+              y: player.y - 15,
+              width: 10,
+              height: 20,
+              speed: 8,
+              owner: "player"
+            });
+          }
+        }
+      }
+    });
+    
+    /* ========= Initialization and Menu ========= */
+    function initGame() {
+      phase = "quiz";
+      score = 0;
+      correctAnswersCount = 0;
+      gameOver = false;
+      currentQuestionIndex = 0;
+      currentQuestion = questions[currentQuestionIndex];
+      questionTimer = 10.0;
+      freezeQuiz = false;
+      player.health = 3;
+      player.invulnerable = false;
+      player.ammo = 0;
+      updateScore();
+      document.getElementById('questionBox').textContent = currentQuestion.question;
+      spawnAnswerBalls();
+      running = true;
+      gameLoop();
+    }
+    function startGame() {
+      document.getElementById('menuScreen').classList.remove('active');
+      document.getElementById('optionsScreen').classList.remove('active');
+      initGame();
+    }
+    
+    /* ========= Phase Transition ========= */
+    setInterval(() => {
+      if (phase === "quiz" && correctAnswersCount >= 3 && !freezeQuiz) {
+        phase = "boss";
+        player.ammo = score;
+        updateScore();
+        spawnBoss();
+      }
+    }, 100);
+  </script>
+</body>
+</html>
