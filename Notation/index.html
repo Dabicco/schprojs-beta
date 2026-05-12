@@ -1,0 +1,2474 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Clef Quest — Note Reading Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.3/build/cjs/vexflow.js"></script>
+<style>
+  :root{
+    --bg-0:#0b0d17;
+    --bg-1:#0f1220;
+    --bg-2:#151829;
+    --surface-1:#171a2b;
+    --surface-2:#1d2038;
+    --ink:#e6e9f5;
+    --ink-2:#a3a8c2;
+    --ink-3:#6b7090;
+    --line:rgba(255,255,255,.06);
+    --line-2:rgba(255,255,255,.11);
+    --accent:#818cf8;
+    --accent-2:#38bdf8;
+    --accent-3:#f472b6;
+    --good:#4ade80;
+    --bad:#f87171;
+    --warn:#fbbf24;
+    --glass: rgba(23,26,43,.85);
+    --glass-2: rgba(23,26,43,.70);
+    --radius:12px;
+    --radius-lg:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;color:var(--ink);font-family:"Space Grotesk",ui-sans-serif,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  body{
+    min-height:100vh; background:var(--bg-0);
+    background-image:
+      radial-gradient(1200px 800px at 0% 0%, rgba(129,140,248,.07), transparent 60%),
+      radial-gradient(900px 600px at 100% 100%, rgba(56,189,248,.05), transparent 60%),
+      linear-gradient(180deg,#0a0d17,#0b0e18);
+    background-attachment:fixed; background-size:cover;
+    overflow-x:hidden;
+  }
+  /* subtle grid */
+  body::before{
+    content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background-image:
+      linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+    background-size: 48px 48px, 48px 48px;
+    mask-image: radial-gradient(ellipse at center, black 0%, transparent 85%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 85%);
+  }
+  /* very subtle accent glows (replacing heavy blobs) */
+  .blob{position:fixed; border-radius:50%; filter:blur(120px); opacity:.12; z-index:-1; pointer-events:none}
+  .blob.b1{width:520px;height:520px;background:#6366f1;top:-180px;left:-160px}
+  .blob.b2{width:420px;height:420px;background:#0ea5e9;bottom:-120px;right:-120px}
+  .blob.b3{display:none}
+
+  .app{max-width:1120px;margin:0 auto;padding:28px 24px 80px;position:relative}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{
+    width:40px;height:40px;border-radius:10px;display:grid;place-items:center;
+    background:linear-gradient(135deg,#818cf8,#6366f1);
+    box-shadow:0 4px 14px rgba(99,102,241,.35);
+    color:#fff;font-weight:700;font-size:20px;
+  }
+  h1{font-size:24px;margin:0;font-weight:600;letter-spacing:-.3px;color:var(--ink)}
+  .sub{color:var(--ink-2);font-size:13px;margin:2px 0 0;font-weight:400}
+
+  .card{
+    background: var(--surface-1);
+    border:1px solid var(--line-2);
+    border-radius: var(--radius-lg); padding:24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.2);
+    position:relative;
+  }
+  .card + .card{margin-top:16px}
+
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .field{flex:1 1 220px;min-width:200px}
+  label{display:block;font-size:12px;color:var(--ink-2);margin-bottom:6px;font-weight:500}
+  select,button,input,textarea{
+    width:100%; color:var(--ink);
+    background: var(--surface-2);
+    border:1px solid var(--line-2); border-radius: var(--radius);
+    padding:10px 12px; font-size:14px; font-family:inherit;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  select:hover,input:hover,textarea:hover{border-color:rgba(129,140,248,.4)}
+  select:focus,button:focus,input:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(129,140,248,.2)}
+  input[type="checkbox"]{width:auto;margin-right:6px}
+
+  .btn{
+    cursor:pointer; font-weight:500; letter-spacing:0;
+    background: var(--accent);
+    border:1px solid var(--accent);
+    color:#fff;
+  }
+  .btn:hover{background:#6366f1;border-color:#6366f1}
+  .btn:active{transform:translateY(1px)}
+  .btn.secondary{background:var(--surface-2);border-color:var(--line-2);color:var(--ink)}
+  .btn.secondary:hover{background:#262a45;border-color:rgba(129,140,248,.35)}
+  .btn.ghost{background:transparent;border-color:var(--line-2);color:var(--ink-2)}
+  .btn.ghost:hover{background:rgba(255,255,255,.03);color:var(--ink);border-color:rgba(129,140,248,.35)}
+  .btn.danger{background:#dc2626;border-color:#dc2626}
+  .btn.danger:hover{background:#b91c1c;border-color:#b91c1c}
+
+  .pill{display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:6px;padding:3px 10px;font-size:12px;color:var(--ink-2);margin-right:4px;font-weight:500}
+  .pill .dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+  .pill.good{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:#86efac}
+  .pill.bad{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.3);color:#fca5a5}
+  .pill.warn{background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.3);color:#fcd34d}
+
+  .grid-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:14px}
+  .choice{
+    cursor:pointer; user-select:none;
+    background: var(--surface-2);
+    border:1px solid var(--line-2); border-radius: var(--radius);
+    padding:18px 14px; text-align:center; font-size:20px; font-weight:600; letter-spacing:.4px;
+    font-family:"JetBrains Mono",ui-monospace,monospace;
+    transition: background .15s ease, border-color .15s ease;
+    position:relative;
+  }
+  .choice .kbd{
+    position:absolute; top:6px; left:8px; font-size:10px;
+    color:var(--ink-3); border:1px solid var(--line-2); border-radius:4px;
+    padding:1px 5px; font-family:"JetBrains Mono",monospace;
+  }
+  .choice:hover{background:#252944;border-color:rgba(129,140,248,.45)}
+  .choice.correct{background:rgba(74,222,128,.15);border-color:var(--good);color:#86efac;animation:popgood .3s ease}
+  .choice.wrong{background:rgba(248,113,113,.15);border-color:var(--bad);color:#fca5a5;animation:shake .35s ease}
+  .choice.disabled{pointer-events:none;opacity:.85}
+  @keyframes popgood { 0%{transform:scale(1)} 50%{transform:scale(1.06)} 100%{transform:scale(1)} }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+
+  .stave-wrap{
+    background:#fbfbff;
+    border-radius:16px; padding:14px;
+    display:flex;justify-content:center;align-items:center;min-height:200px;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.6), 0 18px 40px rgba(0,0,0,.4);
+    position:relative; overflow:hidden;
+  }
+  .stave-wrap::after{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(600px 200px at 50% -20%, rgba(167,139,250,.2), transparent 60%);
+  }
+  .stave-wrap.flash-good{animation:flashGood .5s ease}
+  .stave-wrap.flash-bad{animation:flashBad .5s ease}
+  @keyframes flashGood { 0%{box-shadow:0 0 0 0 rgba(52,211,153,.7)} 100%{box-shadow:0 0 0 18px rgba(52,211,153,0)} }
+  @keyframes flashBad  { 0%{box-shadow:0 0 0 0 rgba(248,113,113,.7)} 100%{box-shadow:0 0 0 18px rgba(248,113,113,0)} }
+
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .stats-row{display:flex;gap:14px;flex-wrap:wrap;font-family:"JetBrains Mono",monospace;font-size:13px;color:var(--ink-2)}
+  .stats-row b{color:var(--ink);font-weight:700}
+  .stats-row .stat{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+  .progress{height:10px;background:rgba(255,255,255,.05);border-radius:999px;overflow:hidden;border:1px solid var(--line);position:relative}
+  .progress > div{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2),var(--accent-3));background-size:200% 100%;width:0%;transition:width .35s cubic-bezier(.4,0,.2,1);animation:flow 4s linear infinite}
+  @keyframes flow { to{background-position:200% 0} }
+
+  .combo{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:"JetBrains Mono",monospace;font-weight:700;
+    color:var(--warn);
+  }
+  .combo.fire{color:#fb923c;text-shadow:0 0 12px rgba(251,146,60,.6)}
+  .combo.fire2{color:#f87171;text-shadow:0 0 16px rgba(248,113,113,.6)}
+
+  .hide{display:none!important}
+  .center{text-align:center}
+  .small{font-size:12px;color:var(--ink-2)}
+  .muted{color:var(--ink-3)}
+
+  .alert{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);border-radius: var(--radius);padding:14px 16px;color:#fca5a5}
+  .alert.success{background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.3);color:#86efac}
+  .alert.warn{background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.3);color:#fcd34d}
+  .alert h2,.alert h3{color:inherit}
+
+  .footer{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center}
+  details{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-top:14px}
+  details summary{cursor:pointer;color:var(--ink-2);font-size:13px;font-weight:500}
+  details[open] summary{margin-bottom:8px}
+
+  .badge{display:inline-block;background:rgba(251,191,36,.15);color:#fcd34d;font-weight:600;border:1px solid rgba(251,191,36,.35);border-radius:6px;padding:2px 8px;font-size:10px;margin-left:8px;letter-spacing:.3px;vertical-align:middle}
+
+  .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .icon-btn{
+    width:40px;height:40px;padding:0;line-height:1;
+    display:inline-flex;align-items:center;justify-content:center;
+    border-radius:10px;
+    background:rgba(255,255,255,.04);border:1px solid var(--line-2);cursor:pointer;
+    color:var(--ink);font-size:18px;
+    font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",system-ui,sans-serif;
+  }
+  .icon-btn:hover{color:var(--ink);border-color:rgba(167,139,250,.5);background:rgba(167,139,250,.1)}
+  .icon-btn.on{color:var(--accent);border-color:rgba(167,139,250,.6)}
+
+  .help-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+  .help-card{
+    background:var(--surface-2);
+    border:1px solid var(--line-2);
+    border-radius:10px; padding:16px;
+    transition:border-color .15s;
+  }
+  .help-card:hover{border-color:rgba(129,140,248,.3)}
+  .help-card .help-h{
+    font-weight:700; font-size:14px; color:var(--ink);
+    margin-bottom:8px; letter-spacing:.2px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .help-card p,.help-card ul{margin:0;font-size:13px;line-height:1.55;color:var(--ink-2)}
+  .help-card ul{padding-left:18px}
+  .help-card li{margin-bottom:5px}
+  .help-card b{color:var(--ink)}
+  .kbd-i{
+    display:inline-block;font-family:"JetBrains Mono",monospace;font-size:11px;
+    background:rgba(255,255,255,.06);border:1px solid var(--line-2);
+    border-radius:5px;padding:2px 7px;color:var(--ink);margin:0 2px;
+  }
+  .kbd-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--ink-2)}
+
+  .tabs{display:flex;gap:2px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:10px;padding:3px;margin-bottom:20px}
+  .tab{flex:1;padding:7px 12px;border-radius:8px;text-align:center;cursor:pointer;font-size:13px;color:var(--ink-2);font-weight:500;transition:background .15s, color .15s}
+  .tab:hover{color:var(--ink)}
+  .tab.active{background:var(--accent);color:#fff;border:0}
+
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:8px}
+  .stats-cell{background:var(--surface-2);border:1px solid var(--line-2);border-radius:10px;padding:14px}
+  .stats-cell .v{font-size:22px;font-weight:600;font-family:"JetBrains Mono",monospace;color:var(--ink)}
+  .stats-cell .k{font-size:11px;color:var(--ink-2);letter-spacing:.3px;margin-bottom:6px;font-weight:500}
+
+  .level-dots{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .ldot{width:22px;height:22px;border-radius:6px;background:rgba(255,255,255,.06);border:1px solid var(--line);display:grid;place-items:center;font-size:10px;font-family:"JetBrains Mono",monospace;color:var(--ink-3)}
+  .ldot.done{background:linear-gradient(180deg,rgba(52,211,153,.4),rgba(52,211,153,.15));border-color:var(--good);color:#bbf7d0}
+
+  /* confetti */
+  .confetti{position:fixed;pointer-events:none;inset:0;z-index:50;overflow:hidden}
+  .confetti i{position:absolute;width:8px;height:14px;top:-20px;border-radius:2px;animation:fall 1.6s linear forwards}
+  @keyframes fall { to{transform:translateY(110vh) rotate(720deg);opacity:0} }
+
+  /* secret debug toast */
+  .toast{
+    position:fixed;left:50%;bottom:30px;transform:translateX(-50%);
+    background: var(--surface-2);
+    border:1px solid var(--line-2); color:var(--ink);
+    padding:10px 16px;border-radius:10px;font-weight:500;font-size:13px;
+    box-shadow:0 10px 30px rgba(0,0,0,.4);
+    animation:popIn .3s ease, fadeOut .3s ease 2.6s forwards;
+    z-index:60;
+  }
+  @keyframes popIn { from{opacity:0;transform:translate(-50%,20px)} to{opacity:1;transform:translate(-50%,0)} }
+  @keyframes fadeOut { to{opacity:0;transform:translate(-50%,20px)} }
+
+  .review-tag{display:inline-block;background:rgba(251,191,36,.18);border:1px solid rgba(251,191,36,.5);color:var(--warn);padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.5px}
+
+  .question-meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--ink-3);margin:8px 2px 4px}
+  .ko-list{display:flex;gap:4px;flex-wrap:wrap}
+  .ko-list .x{display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(248,113,113,.25);border:1px solid var(--bad)}
+
+  @media (max-width:600px){
+    h1{font-size:22px} .card{padding:16px}
+    .choice{font-size:17px;padding:14px 10px}
+  }
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<div class="app">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px">
+    <div class="brand">
+      <div class="logo">♪</div>
+      <div>
+        <h1>Clef Quest <span id="advBadge" class="badge hide">⚡ ADVANCED</span></h1>
+        <div class="sub">Read notes. Beat the clock. Master every clef.</div>
+      </div>
+    </div>
+    <div class="toolbar" id="topToolbar">
+      <button class="icon-btn on" id="btnSound" title="Sound (S)">🔊</button>
+      <button class="icon-btn" id="btnTheme" title="Cycle theme (T)">🎨</button>
+      <button class="icon-btn" id="btnHelp" title="Help (H)">?</button>
+    </div>
+  </div>
+
+  <!-- SETUP -->
+  <div id="setup" class="card">
+    <div class="tabs" id="menuTabs">
+      <div class="tab active" data-tab="play">Play</div>
+      <div class="tab" data-tab="stats">Stats</div>
+      <div class="tab" data-tab="help">How to play</div>
+    </div>
+
+    <div id="tabPlay">
+      <div class="row">
+        <div class="field">
+          <label>Instrument</label>
+          <select id="selInstrument"></select>
+        </div>
+        <div class="field">
+          <label>Difficulty</label>
+          <select id="selDifficulty">
+            <option value="easy">🟢 Easy</option>
+            <option value="normal" selected>🟡 Normal</option>
+            <option value="hard">🔴 Hard</option>
+            <option value="advanced" id="optAdvanced" disabled>⚡ Advanced (locked)</option>
+            <option value="practice">🧘 Practice (no fail)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Answer Mode</label>
+          <select id="selMode">
+            <option value="letter">Letter names (C, D, F#, Bb…)</option>
+            <option value="fingering">Valves / Keys / Fingerings</option>
+          </select>
+        </div>
+        <div class="field" id="clefField">
+          <label>Clef</label>
+          <select id="selClef"></select>
+        </div>
+      </div>
+      <div class="footer">
+        <div class="small muted" id="setupHint">Easy: mostly naturals · Normal: some accidentals · Hard: full range with ♯/♭ · Advanced: 5 levels in 60s total</div>
+        <button class="btn" id="btnStart" style="max-width:240px">Start ▶</button>
+      </div>
+      <details>
+        <summary>📊 Quick progress</summary>
+        <div id="progressBox" class="small" style="margin-top:8px"></div>
+      </details>
+    </div>
+
+    <div id="tabStats" class="hide">
+      <div class="row" style="margin-bottom:12px">
+        <div class="field">
+          <label>Show stats for instrument</label>
+          <select id="statsInst"></select>
+        </div>
+        <div class="field" style="display:flex;align-items:flex-end;gap:8px">
+          <button class="btn ghost" id="btnExportStats" style="max-width:160px">⤓ Export JSON</button>
+          <button class="btn danger" id="btnReset" style="max-width:160px">Reset all</button>
+        </div>
+      </div>
+      <div id="statsBody"></div>
+      <div class="footer">
+        <div class="small muted">Stats are saved locally on this device.</div>
+      </div>
+    </div>
+
+    <div id="tabHelp" class="hide">
+      <div class="help-grid">
+        <div class="help-card">
+          <div class="help-h">🎯 Goal</div>
+          <p>Read the note on the staff and pick the correct answer before the clock runs out. Each level gives you 10 questions and 60 seconds.</p>
+        </div>
+
+        <div class="help-card">
+          <div class="help-h">🎚 Difficulty</div>
+          <ul>
+            <li><b>🟢 Easy</b> — narrow range, mostly naturals, mostly 3 choices, up to <b>2 wrong</b> allowed</li>
+            <li><b>🟡 Normal</b> — wider range, some accidentals, mostly 4 choices, up to <b>1 wrong</b></li>
+            <li><b>🔴 Hard</b> — full range with ♯/♭, mostly 5 choices, <b>0 wrong</b> allowed</li>
+            <li><b>⚡ Advanced</b> (unlocked after mastering Hard) — 5 levels, one shared 60s timer</li>
+            <li><b>🧘 Practice</b> — endless, no timer, no fail. Pure drill mode.</li>
+          </ul>
+        </div>
+
+        <div class="help-card">
+          <div class="help-h">🎹 Answer modes</div>
+          <ul>
+            <li><b>Letter names</b> — type the note name (C, D, F♯, B♭…)</li>
+            <li><b>Fingerings</b> — valves for brass (<span class="kbd-i">0</span> <span class="kbd-i">1+2</span> …), slide positions for trombone (<span class="kbd-i">1st</span>–<span class="kbd-i">7th</span>), simplified keys for woodwinds.</li>
+          </ul>
+        </div>
+
+        <div class="help-card">
+          <div class="help-h">🔁 Wrong answer? Review system</div>
+          <p>The correct answer flashes for <b>1s</b> and the missed note is added to the end of the queue. Miss the same note on review and you wait <b>3s</b>, get a fresh random question, then face the same note again. The queue caps at <b>20</b> — overflow means level failed.</p>
+        </div>
+
+        <div class="help-card">
+          <div class="help-h">🏆 Mastery & progression</div>
+          <p>Clear all 10 levels of a difficulty to <b>master</b> it. Easy L5 = Normal L1 = Hard L1 in difficulty, so progression overlaps cleanly. Master Hard to unlock <b>⚡ Advanced</b>.</p>
+        </div>
+
+        <div class="help-card">
+          <div class="help-h">⌨ Keyboard shortcuts</div>
+          <div class="kbd-row">
+            <span class="kbd-i">1–5</span> answer
+            <span class="kbd-i">Enter</span> start / next
+            <span class="kbd-i">Esc</span> quit / back
+            <span class="kbd-i">S</span> sound
+            <span class="kbd-i">T</span> theme
+            <span class="kbd-i">H</span> help
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div id="game" class="card hide">
+    <div class="topbar">
+      <div>
+        <span class="pill"><span class="dot"></span><span id="pInst"></span></span>
+        <span class="pill" id="pDiff"></span>
+        <span class="pill" id="pMode"></span>
+        <span class="pill" id="pClef"></span>
+      </div>
+      <div class="stats-row">
+        <div class="stat">⏱ <b id="timer">0.0s</b></div>
+        <div class="stat">❌ <b id="wrongCount">0</b>/<span id="maxWrong">1</span></div>
+        <div class="stat">❓ <b id="qIdx">1</b>/<b id="qTotal">10</b></div>
+        <div class="stat combo" id="comboBox" style="display:none">🔥 <b id="comboNum">0</b></div>
+      </div>
+    </div>
+    <div class="progress"><div id="progBar"></div></div>
+    <div class="question-meta">
+      <div id="levelLine"></div>
+      <div class="ko-list" id="koList"></div>
+    </div>
+    <div class="stave-wrap" id="staveWrap"><div id="stave"></div></div>
+    <div id="choices" class="grid-choices"></div>
+    <div id="feedback" class="small center" style="margin-top:12px;min-height:20px"></div>
+    <div class="footer">
+      <button class="btn ghost" id="btnQuit">⟵ Quit</button>
+      <div class="small muted">Pass: ≤60s · max wrong <b id="maxWrong2">1</b> · keys <span class="pill">1-5</span></div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results" class="card hide">
+    <div id="resultBox"></div>
+    <div class="footer">
+      <button class="btn secondary" id="btnRetry">↻ Retry</button>
+      <button class="btn" id="btnNext">Next level ▶</button>
+      <button class="btn ghost" id="btnMenu">Menu</button>
+    </div>
+  </div>
+</div>
+<div id="confettiHost"></div>
+
+<!-- ========================== TEACHER DASHBOARD ========================== -->
+<div id="teacherApp" class="hide">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="app">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:14px">
+      <div class="brand">
+        <div class="logo">🎓</div>
+        <div>
+          <h1>Teacher Dashboard</h1>
+          <div class="sub">Build assignments. Share links. Track student work.</div>
+        </div>
+      </div>
+      <div class="toolbar">
+        <a class="icon-btn" id="btnTeacherToStudent" title="Student view" href="?">🎵</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tabs" id="teacherTabs">
+        <div class="tab active" data-tab="t-assign">📋 Assignments</div>
+        <div class="tab" data-tab="t-roster">👥 Roster</div>
+        <div class="tab" data-tab="t-submit">📥 Submissions</div>
+        <div class="tab" data-tab="t-create">＋ Create</div>
+      </div>
+
+      <div id="t-tab-create" class="hide">
+        <div class="row">
+          <div class="field"><label>Assignment name</label><input id="aName" placeholder="e.g. Trumpet Bb scale week 1"></div>
+          <div class="field"><label>Due date</label><input id="aDue" type="date"></div>
+        </div>
+        <div class="row">
+          <div class="field" style="flex:1 1 100%">
+            <label style="display:flex;align-items:center;cursor:pointer;margin-bottom:0">
+              <input type="checkbox" id="aClassroom">
+              <span>Google Classroom mode</span>
+              <span class="small muted" style="margin-left:8px">Tells students to paste their submission into Classroom comments instead of DMing you the code.</span>
+            </label>
+          </div>
+        </div>
+
+        <h4 style="margin:18px 0 6px">Goal paths</h4>
+        <div class="small muted" style="margin-bottom:10px">Students can choose any path. Add one path for a locked assignment, or multiple paths to let students pick their difficulty/focus.</div>
+        <div id="pathsList" class="stats-grid"></div>
+
+        <div class="card" style="margin-top:14px;background:var(--surface-2)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <b>Configure a path</b>
+            <span class="small muted" id="pathEditHint">Path 1</span>
+          </div>
+          <div class="row">
+            <div class="field"><label>Path name</label><input id="pathName" placeholder="e.g. Easy track"></div>
+            <div class="field"><label>Instrument</label>
+              <select id="aInst"><option value="">Student chooses</option></select>
+            </div>
+            <div class="field"><label>Difficulty</label>
+              <select id="aDiff">
+                <option value="">Student chooses</option>
+                <option value="easy">Easy</option>
+                <option value="normal">Normal</option>
+                <option value="hard">Hard</option>
+                <option value="advanced">Advanced</option>
+                <option value="practice">Practice (no timer)</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Mode</label>
+              <select id="aMode">
+                <option value="">Student chooses</option>
+                <option value="letter">Letter names</option>
+                <option value="fingering">Fingering</option>
+              </select>
+            </div>
+            <div class="field"><label>Clef</label>
+              <select id="aClef">
+                <option value="">Student chooses / instrument default</option>
+                <option value="treble">Treble</option>
+                <option value="bass">Bass</option>
+                <option value="tenor">Tenor</option>
+              </select>
+            </div>
+          </div>
+          <h5 style="margin:12px 0 6px;color:var(--ink-2);font-weight:500">Goals for this path (student must meet ALL)</h5>
+          <div id="goalsList"></div>
+          <div class="row" style="margin-top:10px">
+            <div class="field"><label>Add a goal</label>
+              <select id="goalKind">
+                <option value="answers">Answer N total questions</option>
+                <option value="correct">Get N correct answers</option>
+                <option value="streak">Get N correct in a row</option>
+                <option value="accuracy">Achieve at least X% accuracy (min N answered)</option>
+                <option value="level">Clear level N on a difficulty</option>
+                <option value="master">Master a difficulty</option>
+                <option value="time">Spend at least N minutes practicing</option>
+                <option value="combo">Reach a combo of N</option>
+              </select>
+            </div>
+            <div class="field" style="display:flex;align-items:flex-end"><button class="btn ghost" id="btnAddGoal">+ Add goal</button></div>
+          </div>
+          <div class="footer" style="margin-top:12px">
+            <button class="btn secondary" id="btnAddPath">+ Add this path to assignment</button>
+          </div>
+        </div>
+
+        <div class="footer">
+          <div class="small muted">Link is generated once; share with students. Data is encoded and tamper-resistant.</div>
+          <button class="btn" id="btnCreateAssign" style="max-width:240px">Create assignment</button>
+        </div>
+      </div>
+
+      <div id="t-tab-assign">
+        <div id="assignList" class="stats-grid"></div>
+        <div class="footer"><div class="small muted">Click an assignment to copy its link or view submissions.</div></div>
+      </div>
+
+      <div id="t-tab-roster" class="hide">
+        <div id="rosterTable" style="overflow-x:auto"></div>
+      </div>
+
+      <div id="t-tab-submit" class="hide">
+        <label>Paste student submission code</label>
+        <textarea id="submitInput" rows="6" style="width:100%;font-family:JetBrains Mono,monospace;font-size:12px;background:rgba(10,12,30,.7);color:var(--ink);border:1px solid var(--line-2);border-radius:12px;padding:10px"></textarea>
+        <div class="footer">
+          <div class="small muted">Paste the code your student copies after finishing.</div>
+          <button class="btn" id="btnAddSubmission" style="max-width:200px">Add submission ▶</button>
+        </div>
+        <div id="submitFeedback" style="margin-top:10px"></div>
+      </div>
+    </div>
+
+    <div id="studentDrillCard" class="card hide" style="margin-top:14px">
+      <div id="studentDrill"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================== STUDENT ASSIGNMENT VIEW ========================== -->
+<div id="studentApp" class="hide">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="app">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:14px">
+      <div class="brand">
+        <div class="logo">📝</div>
+        <div>
+          <h1 id="asgTitle">Assignment</h1>
+          <div class="sub" id="asgMeta"></div>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="icon-btn on" id="btnSound2" title="Sound">🔊</button>
+      </div>
+    </div>
+
+    <div id="asgNamePrompt" class="card hide">
+      <h2 style="margin:0 0 8px">Welcome! Tell us who you are</h2>
+      <div class="sub">Your name is saved with your submission so your teacher knows it's you.</div>
+      <div class="row" style="margin-top:14px">
+        <div class="field"><label>First name</label><input id="snFirst"></div>
+        <div class="field"><label>Last name</label><input id="snLast"></div>
+      </div>
+      <div class="footer">
+        <div class="small muted">Your work is saved on this device. You can leave and come back.</div>
+        <button class="btn" id="btnStartAsg" style="max-width:240px">Continue</button>
+      </div>
+    </div>
+
+    <div id="asgPathPicker" class="card hide">
+      <h2 style="margin:0 0 8px">Choose your path</h2>
+      <div class="sub">Your teacher has set up multiple options. Pick the one you want to do.</div>
+      <div id="asgPathList" class="stats-grid" style="margin-top:14px"></div>
+    </div>
+
+    <div id="asgGoalsCard" class="card hide" style="margin-bottom:14px">
+      <div class="topbar">
+        <div><b id="asgWho"></b> <span class="pill" id="asgDuePill"></span></div>
+        <div class="small muted">Progress saved automatically</div>
+      </div>
+      <div id="asgGoalsList" class="stats-grid"></div>
+    </div>
+
+    <div id="asgCompletion" class="card hide">
+      <div id="asgCompletionBody"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+ * NOTE READING GAME
+ * Single-file HTML app. Uses VexFlow 4.x for notation rendering.
+ * ============================================================================ */
+const VF = Vex.Flow;
+
+/* ---------------------------- Pitch utilities ----------------------------- */
+const NAT = ["C","D","E","F","G","A","B"];
+const SEMI = {C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+function midi(name){ // "C#4" -> midi number; supports b/#
+  const m = name.match(/^([A-G])([#b]?)(-?\d+)$/);
+  if(!m) throw new Error("bad note "+name);
+  const acc = m[2]==="#"?1:m[2]==="b"?-1:0;
+  return (parseInt(m[3])+1)*12 + SEMI[m[1]] + acc;
+}
+function midiToSpelling(mid, prefer="sharp"){ // returns {letter, acc, octave, name, vfKey}
+  const pc = ((mid%12)+12)%12;
+  const sharpNames = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+  const flatNames  = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+  const arr = prefer==="flat" ? flatNames : sharpNames;
+  const nm = arr[pc];
+  const oct = Math.floor(mid/12)-1;
+  const letter = nm[0];
+  const acc = nm.length>1 ? nm[1] : "";
+  // VexFlow note key for accidentals: "c#/4" or "bb/3"
+  const vfKey = letter.toLowerCase() + (acc==="#"?"#":acc==="b"?"b":"") + "/" + oct;
+  return {letter,acc,octave:oct,name:nm+oct,vfKey,midi:mid};
+}
+function rangeMidis(lowName, highName){
+  const a=midi(lowName), b=midi(highName);
+  const out=[]; for(let m=a;m<=b;m++) out.push(m); return out;
+}
+
+/* ---------------------------- Fingering helpers --------------------------- */
+/* Brass 3-valve fingerings indexed by semitones below the nearest "open" partial.
+   Standard: 0,2,1,12,23,13,123 for 0..6 semitones below open. */
+const VALVE_BY_SEMIS = ["0","2","1","1+2","2+3","1+3","1+2+3"];
+/* Each brass instrument lists open partials (written) as midi numbers ascending.
+   Player picks the lowest open >= note; semitones diff -> valve combo. */
+function brassFinger(noteMidi, openPartials){
+  // find smallest open >= note within reach (<=6 semitones above)
+  for(const op of openPartials){
+    const diff = op - noteMidi;
+    if(diff>=0 && diff<=6) return VALVE_BY_SEMIS[diff];
+  }
+  // fallback: nearest above
+  let best=null,bd=99;
+  for(const op of openPartials){ const d=op-noteMidi; if(d>=0&&d<bd){bd=d;best=op;} }
+  if(best!=null && bd<=6) return VALVE_BY_SEMIS[bd];
+  return "?";
+}
+/* Trombone slide positions: written-pitch based partial table.
+   Positions 1..7 = open..6 semitones flatter. Order: 1,2,3,4,5,6,7. */
+const SLIDE_BY_SEMIS = ["1st","2nd","3rd","4th","5th","6th","7th"];
+function tromboneFinger(noteMidi, openPartials){
+  for(const op of openPartials){
+    const diff=op-noteMidi;
+    if(diff>=0 && diff<=6) return SLIDE_BY_SEMIS[diff];
+  }
+  return "?";
+}
+
+/* Open partial sets (written pitch midi). Includes pedal/low tones where useful. */
+// Trumpet (Bb, written): C4(60), G4(67), C5(72), E5(76), G5(79), Bb5(82 -> usually "1"), C6(84)
+const TPT_OPEN = [60,67,72,76,79,84]; // exclude Bb5 to favor "1" fingering convention
+// French horn (F): treble written; partials similar pattern. Use written: C4(60),G4(67),C5(72),E5(76),G5(79),C6(84),E6(88)
+const HORN_OPEN = [60,67,72,76,79,84,88];
+// Tuba BBb (bass clef written): pedal Bb1(34), F2(41), Bb2(46), D3(50), F3(53), Ab3(56),Bb3(58),C4(60)
+const TUBA_OPEN = [34,41,46,50,53,58,60,65,70];
+// Euphonium/Baritone (Bb, BC written): like tuba up an octave. Bb2(46), F3(53), Bb3(58), D4(62), F4(65), Ab4(68), Bb4(70), C5(72)
+const EUPH_OPEN = [46,53,58,62,65,70,72,77];
+// Trombone (BC written, no transposition): partials per 1st position: Bb1(34), Bb2(46), F3(53), Bb3(58), D4(62), F4(65), Ab4(68), Bb4(70), C5(72)
+const TBN_OPEN = [34,46,53,58,62,65,68,70,72,77];
+// Mellophone (F): treble written. Same as horn fingering map.
+const MELLO_OPEN = HORN_OPEN;
+
+/* Woodwind: we provide curated fingering tables for common range.
+   Format: midi -> short fingering label.
+   Where missing, we render "—" and skip in fingering mode. */
+function ww(map){ const r={}; for(const k in map) r[midi(k)]=map[k]; return r; }
+
+/* Flute (concert pitch). Simplified key-name fingerings (left|right). */
+const FLUTE_FING = ww({
+  "C4":"T123|123 C",  "C#4":"T123|123",   "D4":"T123|123",
+  "D#4":"T123|123 D#","E4":"T123|12",     "F4":"T123|1",
+  "F#4":"T123|2",     "G4":"T123|—",      "G#4":"T1234|—",
+  "A4":"T12|—",       "A#4":"T1 Bb|1",    "B4":"T1|—",
+  "C5":"T2|—",        "C#5":"—|—",        "D5":"—|123",
+  "D#5":"—|123 D#",   "E5":"T123|12",     "F5":"T123|1",
+  "F#5":"T123|2",     "G5":"T123|—",      "G#5":"T1234|—",
+  "A5":"T12|—",       "A#5":"T1 Bb|1",    "B5":"T1|—",
+  "C6":"T2|—",        "C#6":"T—|—",       "D6":"—|123 D#",
+  "D#6":"T1234|2 D#", "E6":"T123 G#|2 D#","F6":"T12 G#|1 D#",
+});
+
+/* Clarinet (Bb, written). Common range; left thumb=T, register=R. Simplified. */
+const CLAR_FING = ww({
+  "E3":"T123|123 C",  "F3":"T123|123 B",  "F#3":"T123|123 F#","G3":"T123|123",
+  "G#3":"T123|123 G#","A3":"T123|12 sl",  "A#3":"T12|—",      "B3":"T1|—",
+  "C4":"T2|—",        "C#4":"—|—",        "D4":"T1|2",        "D#4":"T1|1",
+  "E4":"T123|123",    "F4":"T123|123 F",  "F#4":"T123|12",    "G4":"T123|1",
+  "G#4":"T123|—",     "A4":"T12|—",       "A#4":"T1 R|—",     "B4":"R T123|123",
+  "C5":"R T123|12",   "C#5":"R T123|1",   "D5":"R T123|—",    "D#5":"R T12|—",
+  "E5":"R T1|—",      "F5":"R T2|—",      "F#5":"R T1|—",     "G5":"R T1|2",
+  "G#5":"R T123|123 G#","A5":"R T123|12 sl","A#5":"R T12|—",  "B5":"R T1|—",
+  "C6":"R T2|—",
+});
+
+/* Saxophone (any size; written treble). Standard fingerings. Simplified. */
+const SAX_FING = ww({
+  "A#3":"Bb |123|123","B3":"|123|123",    "C4":"|12 |123",    "C#4":"|—|—",
+  "D4":"|123|123",    "D#4":"|123|123 Eb","E4":"|123|12",     "F4":"|123|1",
+  "F#4":"|123|2 or Fk","G4":"|123|—",     "G#4":"|123|—  G#", "A4":"|12 |—",
+  "A#4":"|1 Bk|—",    "B4":"|1|—",        "C5":"|2|—",        "C#5":"|—|— C#",
+  "D5":"oct |123|123","D#5":"oct|123|123 Eb","E5":"oct|123|12","F5":"oct|123|1",
+  "F#5":"oct|123|2",  "G5":"oct|123|—",   "G#5":"oct|123|— G#","A5":"oct|12|—",
+  "A#5":"oct|1 Bk|—", "B5":"oct|1|—",     "C6":"oct|2|—",     "C#6":"oct |—|— C#",
+  "D6":"oct pal D|—|—","D#6":"oct pal D Eb|—|—","E6":"oct pal D E|—|—","F6":"oct pal D E F|—|—",
+});
+
+/* Oboe — simplified core range */
+const OBOE_FING = ww({
+  "B3":"T |123|123 Bb","C4":"T |12|123","C#4":"T|—|— C#",  "D4":"T|123|123",
+  "D#4":"T|123|123 Eb","E4":"T|123|12", "F4":"T|123|1 F",  "F#4":"T|123|2",
+  "G4":"T|123|—",      "G#4":"T|123|G#","A4":"T|12|—",     "A#4":"T|1 Bb|—",
+  "B4":"T|1|—",        "C5":"T|2|—",    "C#5":"T|—|— C#",  "D5":"|123|123",
+  "D#5":"|123|123 Eb", "E5":"oct|123|12","F5":"oct|123|1", "F#5":"oct|123|2",
+  "G5":"oct|123|—",    "G#5":"oct|123|G#","A5":"oct|12|—", "A#5":"oct|1 Bb|—",
+  "B5":"oct|1|—",      "C6":"oct|2|—",
+});
+
+/* Bassoon — simplified */
+const BSN_FING = ww({
+  "Bb1":"T Bb|123|123 F", "B1":"T B|123|123 F",  "C2":"T C|123|123 F",
+  "D2":"T D|123|123 F",   "Eb2":"T D|123|123 F + Eb","E2":"T D|123|123",
+  "F2":"T D|123|12 F",    "F#2":"T D|123|12",    "G2":"T D|123|1",
+  "G#2":"T D|123|2 Ab",   "A2":"T D|123|—",      "Bb2":"T D|12 Bb|—",
+  "B2":"T D|—|—",         "C3":"T D|2|—",        "C#3":"T D|—|— C#",
+  "D3":"T D|1|—",         "Eb3":"T D|—|— Eb",    "E3":"T D|123|12",
+  "F3":"T D|123|1",       "F#3":"T D|123|2",     "G3":"T D|123|—",
+  "Ab3":"T D|123|2 Ab",   "A3":"T|123|—",        "Bb3":"T|12 Bb|—",
+  "B3":"T|1|—",           "C4":"T|2|—",          "C#4":"T|—|— C#",
+  "D4":"T|1|—",           "Eb4":"T|—|— Eb",      "E4":"T|123|12",
+  "F4":"T|123|1",         "F#4":"T|123|2",       "G4":"T|123|—",
+  "A4":"T|—|—",           "Bb4":"T|12 Bb|—",     "B4":"T|1|—",     "C5":"T|2|—"
+});
+
+/* ---------------------------- Instrument data ----------------------------- */
+/* Range = WRITTEN pitch (what the player reads).
+   transposition kept for info; we always work in written pitch for display. */
+const INSTRUMENTS = {
+  /* ---- Brass ---- */
+  trumpet:    { name:"Trumpet (Bb)",        family:"brass", clefs:["treble"], range:["F#3","C6"], fingType:"valve",
+                fingerFn:m=>brassFinger(m,TPT_OPEN) },
+  cornet:     { name:"Cornet (Bb)",         family:"brass", clefs:["treble"], range:["F#3","C6"], fingType:"valve",
+                fingerFn:m=>brassFinger(m,TPT_OPEN) },
+  flugelhorn: { name:"Flugelhorn (Bb)",     family:"brass", clefs:["treble"], range:["F#3","Bb5"], fingType:"valve",
+                fingerFn:m=>brassFinger(m,TPT_OPEN) },
+  frenchhorn: { name:"French Horn (F)",     family:"brass", clefs:["treble"], range:["G3","C6"],  fingType:"valve",
+                fingerFn:m=>brassFinger(m,HORN_OPEN) },
+  mellophone: { name:"Mellophone (F)",      family:"brass", clefs:["treble"], range:["G3","C6"],  fingType:"valve",
+                fingerFn:m=>brassFinger(m,MELLO_OPEN) },
+  trombone:   { name:"Trombone",            family:"brass", clefs:["bass","tenor"], range:["E2","Bb4"], fingType:"slide",
+                fingerFn:m=>tromboneFinger(m,TBN_OPEN) },
+  baritone:   { name:"Baritone",            family:"brass", clefs:["bass","treble"], fingType:"valve",
+                byClef:{ bass:{range:["E2","Bb4"], open:EUPH_OPEN}, treble:{range:["F#3","C6"], open:TPT_OPEN} },
+                fingerFn:(m,clef)=>brassFinger(m, clef==="treble"?TPT_OPEN:EUPH_OPEN) },
+  euphonium:  { name:"Euphonium",           family:"brass", clefs:["bass","treble"], fingType:"valve",
+                byClef:{ bass:{range:["E2","Bb4"], open:EUPH_OPEN}, treble:{range:["F#3","C6"], open:TPT_OPEN} },
+                fingerFn:(m,clef)=>brassFinger(m, clef==="treble"?TPT_OPEN:EUPH_OPEN) },
+  tuba:       { name:"Tuba (BBb)",          family:"brass", clefs:["bass"],   range:["F1","F4"],  fingType:"valve",
+                fingerFn:m=>brassFinger(m,TUBA_OPEN) },
+  sousaphone: { name:"Sousaphone",          family:"brass", clefs:["bass"],   range:["F1","F4"],  fingType:"valve",
+                fingerFn:m=>brassFinger(m,TUBA_OPEN) },
+
+  /* ---- Woodwinds ---- */
+  flute:      { name:"Flute",               family:"ww", clefs:["treble"], range:["C4","F6"], fingType:"keys", fingerMap:FLUTE_FING },
+  piccolo:    { name:"Piccolo",             family:"ww", clefs:["treble"], range:["D4","C6"], fingType:"keys", fingerMap:FLUTE_FING },
+  oboe:       { name:"Oboe",                family:"ww", clefs:["treble"], range:["B3","C6"], fingType:"keys", fingerMap:OBOE_FING },
+  englishhorn:{ name:"English Horn (F)",    family:"ww", clefs:["treble"], range:["B3","C6"], fingType:"keys", fingerMap:OBOE_FING },
+  clarinet:   { name:"Clarinet (Bb)",       family:"ww", clefs:["treble"], range:["E3","C6"], fingType:"keys", fingerMap:CLAR_FING },
+  bassclar:   { name:"Bass Clarinet (Bb)",  family:"ww", clefs:["treble"], range:["E3","C6"], fingType:"keys", fingerMap:CLAR_FING },
+  bassoon:    { name:"Bassoon",             family:"ww", clefs:["bass","tenor"], range:["Bb1","C5"], fingType:"keys", fingerMap:BSN_FING },
+  sopranosax: { name:"Soprano Sax (Bb)",    family:"ww", clefs:["treble"], range:["A#3","F6"], fingType:"keys", fingerMap:SAX_FING },
+  altosax:    { name:"Alto Sax (Eb)",       family:"ww", clefs:["treble"], range:["A#3","F6"], fingType:"keys", fingerMap:SAX_FING },
+  tenorsax:   { name:"Tenor Sax (Bb)",      family:"ww", clefs:["treble"], range:["A#3","F6"], fingType:"keys", fingerMap:SAX_FING },
+  barisax:    { name:"Baritone Sax (Eb)",   family:"ww", clefs:["treble"], range:["A#3","F6"], fingType:"keys", fingerMap:SAX_FING },
+};
+
+/* For woodwinds, restrict playable notes to those in fingering map (when in fingering mode). */
+function playableMidis(inst, clef, mode){
+  const r = (inst.byClef && inst.byClef[clef] && inst.byClef[clef].range) || inst.range;
+  let mids = rangeMidis(r[0], r[1]);
+  if(mode==="fingering"){
+    if(inst.fingerMap){
+      mids = mids.filter(m => inst.fingerMap[m]);
+    } else if(inst.fingerFn){
+      mids = mids.filter(m => {
+        const f = inst.fingerFn(m, clef);
+        return f && f!=="?" && f!=="—";
+      });
+    }
+  }
+  return mids;
+}
+
+/* ---------------------------- Difficulty stages --------------------------- */
+/* Stages 1..18. Easy L_n = stage n. Normal L_n = stage n+4. Hard L_n = stage n+8.
+   Stage defines:
+     - rangePct: [loFrac, hiFrac] window of instrument range (0..1)
+     - accChance: probability of picking an accidental
+     - choices: weighted [3,4,5] choice counts
+*/
+function stageFor(diff,level){
+  if(diff==="easy")    return level;          // 1..10
+  if(diff==="normal")  return level+4;        // 5..14
+  if(diff==="hard")    return level+8;        // 9..18
+  return level+8; // advanced uses hard+ progression baseline
+}
+function stageDef(s){
+  // smooth interpolation
+  s = Math.max(1,Math.min(18,s));
+  const t = (s-1)/17; // 0..1
+  // window: easy stages center small; later stages expand both ways
+  const lo = Math.max(0, 0.45 - 0.5*t);
+  const hi = Math.min(1, 0.55 + 0.5*t);
+  // accidental chance: <5% on easy, scaling to ~50% on hard 10
+  const accChance = Math.min(0.55, Math.max(0.02, (s-1)/22));
+  return {window:[lo,hi], accChance};
+}
+
+/* Choice count distribution by user difficulty selection. */
+function pickChoiceCount(diff){
+  const r = Math.random();
+  if(diff==="easy"){    // mostly 3, sometimes 4, rarely 5
+    if(r<0.65) return 3; if(r<0.92) return 4; return 5;
+  }
+  if(diff==="hard"){    // mostly 5, sometimes 4, rarely 3
+    if(r<0.65) return 5; if(r<0.92) return 4; return 3;
+  }
+  if(diff==="advanced"){ if(r<0.7) return 5; if(r<0.95) return 4; return 3; }
+  // normal: tendency to 4
+  if(r<0.6) return 4; if(r<0.8) return 3; return 5;
+}
+
+/* --------------------------- Question generation -------------------------- */
+function pickNote(inst, clef, mode, stage){
+  const def = stageDef(stage);
+  const allMids = playableMidis(inst,clef,mode);
+  if(allMids.length===0) return null;
+  const inSet = new Set(allMids);
+  const loIdx = Math.floor(def.window[0]*(allMids.length-1));
+  const hiIdx = Math.floor(def.window[1]*(allMids.length-1));
+  const lo = allMids[loIdx], hi = allMids[hiIdx];
+  const naturals = [], accs = [];
+  for(let m=lo;m<=hi;m++){
+    if(!inSet.has(m)) continue;
+    const sp = midiToSpelling(m,"sharp");
+    if(sp.acc==="") naturals.push(m); else accs.push(m);
+  }
+  let chosenMid;
+  const useAcc = Math.random() < def.accChance;
+  // Adaptive: 60% adaptive (weight notes user struggles with) + 40% pure random
+  const pool = useAcc && accs.length ? accs : (naturals.length ? naturals : allMids);
+  const useAdaptive = Math.random() < 0.6 && State.instKey;
+  if(useAdaptive){
+    const w = adaptiveWeights(State.instKey, pool);
+    chosenMid = weightedPick(pool, w);
+  } else {
+    chosenMid = pool[Math.floor(Math.random()*pool.length)];
+  }
+  // Bias spelling: bass clef leans flat (idiomatic for low brass/bassoon),
+  // tenor/treble leans sharp. Always allow either via 25% counter-bias.
+  let preferFlat;
+  if(clef==="bass") preferFlat = Math.random()<0.7;
+  else if(clef==="tenor") preferFlat = Math.random()<0.5;
+  else preferFlat = Math.random()<0.35;
+  return midiToSpelling(chosenMid, preferFlat?"flat":"sharp");
+}
+
+function answerForNote(inst, clef, mode, note){
+  if(mode==="letter") return note.letter + (note.acc||"");
+  if(inst.fingType==="valve") return inst.fingerFn(note.midi, clef);
+  if(inst.fingType==="slide") return inst.fingerFn(note.midi, clef);
+  if(inst.fingType==="keys") return inst.fingerMap[note.midi] || "—";
+  return "?";
+}
+
+function generateChoices(inst, clef, mode, note, count){
+  const correct = answerForNote(inst,clef,mode,note);
+  const set = new Set([correct]);
+  let guard=0;
+  while(set.size<count && guard++<200){
+    if(mode==="letter"){
+      const letters = ["C","D","E","F","G","A","B"];
+      const accs = ["","#","b"];
+      const cand = letters[Math.floor(Math.random()*7)] + accs[Math.floor(Math.random()*3)];
+      set.add(cand);
+    } else {
+      // pick another playable note's answer
+      const mids = playableMidis(inst,clef,mode);
+      const m = mids[Math.floor(Math.random()*mids.length)];
+      const n = midiToSpelling(m, Math.random()<0.5?"sharp":"flat");
+      const a = answerForNote(inst,clef,mode,n);
+      if(a && a!=="—" && a!=="?") set.add(a);
+    }
+  }
+  const arr = Array.from(set).slice(0,count);
+  // shuffle
+  for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  return {choices:arr, correct};
+}
+
+/* ----------------------------- VexFlow render ----------------------------- */
+function renderNote(elId, clef, note){
+  const el = document.getElementById(elId);
+  el.innerHTML = "";
+  const renderer = new VF.Renderer(el, VF.Renderer.Backends.SVG);
+  const W = Math.min(520, el.parentElement.clientWidth - 20);
+  renderer.resize(W, 180);
+  const ctx = renderer.getContext();
+  const stave = new VF.Stave(10, 30, W-20);
+  stave.addClef(clef).setContext(ctx).draw();
+  const sn = new VF.StaveNote({clef, keys:[note.vfKey], duration:"w"});
+  if(note.acc==="#") sn.addModifier(new VF.Accidental("#"),0);
+  else if(note.acc==="b") sn.addModifier(new VF.Accidental("b"),0);
+  const voice = new VF.Voice({num_beats:4, beat_value:4});
+  voice.addTickables([sn]);
+  new VF.Formatter().joinVoices([voice]).format([voice], W-80);
+  voice.draw(ctx, stave);
+}
+
+/* -------------------------------- Game state ------------------------------ */
+const State = {
+  inst:null, instKey:null, diff:"normal", mode:"letter", clef:"treble",
+  level:1, stage:1,
+  queue:[], idx:0, total:10, wrong:0, attempts:{},
+  startedAt:null, firstAnswered:false,
+  current:null, currentChoices:null, currentCorrect:null,
+  isAdvanced:false, isPractice:false, advTotalMs:60000, advLevelIdx:0,
+  combo:0, maxCombo:0, totalAnswered:0, totalCorrect:0,
+  sound:true, theme:0,
+};
+const Save = {
+  load(){ try{ return JSON.parse(localStorage.getItem("nrg_save")||"{}"); }catch{return{};} },
+  save(d){ localStorage.setItem("nrg_save", JSON.stringify(d)); },
+};
+
+/* ============================== STATS MODULE ============================== */
+const Stats = (() => {
+  function blank(){
+    return {
+      answered:0, correct:0, timeMs:0, sessions:0,
+      firstPlayed:null, lastPlayed:null,
+      maxCombo:0, totalWrongStreaks:0,
+      byDiff:{}, byClef:{}, byMode:{}, perNote:{},
+      bestLevel:{easy:0, normal:0, hard:0, advanced:0},
+      mastered:{},
+      noteHistory:[], // last 200 answers for trends
+    };
+  }
+  function getInst(save, key){
+    save.inst = save.inst || {};
+    if(!save.inst[key]) save.inst[key] = blank();
+    // migrate legacy
+    const legacy = save["inst_"+key];
+    if(legacy && !save.inst[key]._migrated){
+      save.inst[key].answered += legacy.answered||0;
+      save.inst[key].correct += legacy.correct||0;
+      save.inst[key]._migrated = true;
+    }
+    return save.inst[key];
+  }
+  function bump(obj, k, c){ obj[k] = obj[k] || {a:0,c:0}; obj[k].a++; if(c) obj[k].c++; }
+  function record({instKey, diff, clef, mode, midi, correct, ms}){
+    const save = Save.load();
+    const s = getInst(save, instKey);
+    const now = Date.now();
+    if(!s.firstPlayed) s.firstPlayed = now;
+    s.lastPlayed = now;
+    s.answered++; if(correct) s.correct++;
+    s.timeMs += ms||0;
+    bump(s.byDiff, diff, correct);
+    bump(s.byClef, clef, correct);
+    bump(s.byMode, mode, correct);
+    bump(s.perNote, midi, correct);
+    s.noteHistory.push({m:midi, c:correct?1:0, t:now});
+    if(s.noteHistory.length>200) s.noteHistory.splice(0, s.noteHistory.length-200);
+    Save.save(save);
+  }
+  function recordSession({instKey, diff, level, passed, maxCombo, mastered}){
+    const save = Save.load();
+    const s = getInst(save, instKey);
+    s.sessions++;
+    if(maxCombo > s.maxCombo) s.maxCombo = maxCombo;
+    if(passed){
+      s.bestLevel[diff] = Math.max(s.bestLevel[diff]||0, level);
+      if(mastered) s.mastered[diff] = true;
+    }
+    Save.save(save);
+  }
+  function get(key){ return getInst(Save.load(), key); }
+  return { record, recordSession, get, blank };
+})();
+
+/* Adaptive question helper: weight midis by how often the user gets them wrong */
+function adaptiveWeights(instKey, midis){
+  const s = Stats.get(instKey);
+  const w = midis.map(m=>{
+    const e = s.perNote[m];
+    if(!e || e.a<2) return 1.0; // unknown -> baseline
+    const acc = e.c / e.a;
+    // weight inversely to accuracy, with floor for very-known notes (still appear sometimes)
+    return Math.max(0.25, 1.7 - acc*1.5);
+  });
+  return w;
+}
+function weightedPick(arr, weights){
+  let total = 0; for(const w of weights) total += w;
+  let r = Math.random()*total;
+  for(let i=0;i<arr.length;i++){ r -= weights[i]; if(r<=0) return arr[i]; }
+  return arr[arr.length-1];
+}
+
+/* ------------------------------ UI population ----------------------------- */
+const elInst = document.getElementById("selInstrument");
+const elDiff = document.getElementById("selDifficulty");
+const elMode = document.getElementById("selMode");
+const elClef = document.getElementById("selClef");
+const elClefField = document.getElementById("clefField");
+
+function populateInstruments(){
+  const groups = {brass:"Brass", ww:"Woodwinds"};
+  const order = Object.keys(INSTRUMENTS);
+  const byFam = {};
+  order.forEach(k=>{ const f=INSTRUMENTS[k].family; (byFam[f] ||= []).push(k); });
+  elInst.innerHTML = "";
+  for(const f of ["brass","ww"]){
+    const og = document.createElement("optgroup"); og.label = groups[f];
+    byFam[f].forEach(k=>{
+      const o=document.createElement("option"); o.value=k; o.textContent=INSTRUMENTS[k].name; og.appendChild(o);
+    });
+    elInst.appendChild(og);
+  }
+  elInst.value = "trumpet";
+  refreshClefField();
+}
+function refreshClefField(){
+  const inst = INSTRUMENTS[elInst.value];
+  elClef.innerHTML = "";
+  inst.clefs.forEach(c=>{
+    const o=document.createElement("option"); o.value=c;
+    o.textContent = c.charAt(0).toUpperCase()+c.slice(1)+" clef";
+    elClef.appendChild(o);
+  });
+  elClefField.style.display = inst.clefs.length>1 ? "" : "none";
+}
+elInst.addEventListener("change", refreshClefField);
+
+/* ------------------------------- Progress UI ------------------------------ */
+function fmtPct(c, a){ return a>0 ? Math.round(100*c/a)+"%" : "—"; }
+function fmtMs(ms){
+  if(!ms) return "—";
+  if(ms<60000) return (ms/1000).toFixed(1)+"s";
+  return Math.floor(ms/60000)+"m "+Math.round((ms%60000)/1000)+"s";
+}
+function noteName(midi){ const sp = midiToSpelling(midi,"sharp"); return sp.letter+(sp.acc||"")+sp.octave; }
+
+function updateProgressBox(){
+  const save = Save.load();
+  const key = elInst.value;
+  const inst = INSTRUMENTS[key];
+  const s = Stats.get(key);
+  const box = document.getElementById("progressBox");
+  const acc = fmtPct(s.correct, s.answered);
+  const bestSummary = ["easy","normal","hard","advanced"].map(d=>{
+    const lvl = (s.bestLevel&&s.bestLevel[d])||0;
+    const max = d==="advanced"?5:10;
+    const m = s.mastered&&s.mastered[d];
+    return `<span class="pill ${m?'good':''}">${d}: ${lvl}/${max}${m?' ★':''}</span>`;
+  }).join(" ");
+  box.innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+      <b>${inst.name}</b>
+      <span class="pill">🎯 ${acc}</span>
+      <span class="pill">📝 ${s.answered} answered</span>
+      <span class="pill">⏱ ${fmtMs(s.timeMs)}</span>
+      <span class="pill">🔥 max ${s.maxCombo}</span>
+      <span class="pill">🎬 ${s.sessions} sessions</span>
+    </div>
+    <div style="margin-top:8px">${bestSummary}</div>
+  `;
+  // unlock advanced
+  if(save.mastered_hard || (s.mastered && s.mastered.hard)){
+    document.getElementById("optAdvanced").disabled = false;
+    document.getElementById("optAdvanced").textContent = "⚡ Advanced (unlocked)";
+    document.getElementById("advBadge").classList.remove("hide");
+  }
+}
+elInst.addEventListener("change", updateProgressBox);
+
+/* --------------------------------- Start ---------------------------------- */
+document.getElementById("btnStart").addEventListener("click", ()=>{
+  State.instKey = elInst.value;
+  State.inst = INSTRUMENTS[State.instKey];
+  State.diff = elDiff.value;
+  State.mode = elMode.value;
+  State.clef = elClef.value || State.inst.clefs[0];
+  State.isAdvanced = State.diff==="advanced";
+  State.isPractice = State.diff==="practice";
+  State.level = 1;
+  State.combo = 0; State.maxCombo = 0;
+  State.totalAnswered = 0; State.totalCorrect = 0;
+  startLevel();
+});
+
+document.getElementById("btnQuit").addEventListener("click", ()=>{
+  toScreen("setup");
+  stopTimer();
+});
+document.getElementById("btnMenu").addEventListener("click", ()=>{ toScreen("setup"); });
+document.getElementById("btnRetry").addEventListener("click", ()=>{ startLevel(); });
+document.getElementById("btnNext").addEventListener("click", ()=>{
+  State.level += 1; startLevel();
+});
+
+function toScreen(name){
+  for(const id of ["setup","game","results"]){
+    document.getElementById(id).classList.toggle("hide", id!==name);
+  }
+  if(name==="setup") updateProgressBox();
+}
+
+/* -------------------------------- Level flow ------------------------------ */
+function maxWrongFor(diff){
+  if(diff==="practice") return Infinity;
+  return diff==="easy"?2 : diff==="normal"?1 : 0;
+}
+function startLevel(){
+  State.stage = State.isPractice ? 7
+              : State.isAdvanced ? (10+State.level)
+              : stageFor(State.diff, State.level);
+  State.queue = [];
+  State.attempts = {};
+  State.idx = 0;
+  State.overflowFail = false;
+  // wrong count: in advanced, accumulate; otherwise reset
+  if(!State.isAdvanced || State.level===1){ State.wrong = 0; }
+  // timer: reset for normal levels; in advanced keep running across levels (don't reset after L1)
+  if(!State.isAdvanced){
+    State.startedAt = null;
+    State.firstAnswered = false;
+  } else if(State.level===1){
+    State.startedAt = null;
+    State.firstAnswered = false;
+  }
+  State.advLevelIdx = State.isAdvanced ? (State.level-1) : 0;
+
+  const baseQ = State.isAdvanced ? 10 : 10;
+  for(let i=0;i<baseQ;i++) State.queue.push(makeQuestion());
+  State.total = baseQ;
+
+  // pills
+  document.getElementById("pInst").textContent = State.inst.name;
+  const diffLabel = State.isPractice ? "🧘 PRACTICE"
+    : State.diff==="easy"?"🟢 EASY":State.diff==="normal"?"🟡 NORMAL":State.diff==="hard"?"🔴 HARD":"⚡ ADVANCED";
+  document.getElementById("pDiff").textContent = diffLabel+" · L"+State.level + (State.isAdvanced?` /5 · 60s total`:State.isPractice?" · endless":` /10`);
+  document.getElementById("pMode").textContent = State.mode==="letter"?"Letter":"Fingering";
+  document.getElementById("pClef").textContent = State.clef[0].toUpperCase()+State.clef.slice(1)+" clef";
+  const mw = maxWrongFor(State.diff);
+  const mwTxt = mw===Infinity?"∞":mw;
+  document.getElementById("maxWrong").textContent = mwTxt;
+  document.getElementById("maxWrong2").textContent = mwTxt;
+  document.getElementById("levelLine").innerHTML = State.isPractice
+    ? `<span class="muted">Practice mode · no time limit · no fail</span>`
+    : `<span class="muted">Stage ${State.stage} · pass in ≤60s with ≤${mwTxt} wrong</span>`;
+  document.getElementById("wrongCount").textContent = "0";
+  document.getElementById("qIdx").textContent = "1";
+  document.getElementById("qTotal").textContent = State.total;
+  document.getElementById("koList").innerHTML = "";
+  document.getElementById("comboBox").style.display = "none";
+  toScreen("game");
+  showQuestion();
+  if(State.isAdvanced && State.level===1){
+    showToast("⚡ ADVANCED — 60s for all 5 levels. Go!", 2500);
+  }
+}
+
+function makeQuestion(){
+  const note = pickNote(State.inst, State.clef, State.mode, State.stage);
+  const count = pickChoiceCount(State.diff);
+  const {choices, correct} = generateChoices(State.inst, State.clef, State.mode, note, count);
+  return { id: Math.random().toString(36).slice(2), note, choices, correct, isReview:false };
+}
+
+function showQuestion(){
+  const q = State.queue[State.idx];
+  if(!q){ return endLevel(true); }
+  State.current = q;
+  State.questionStart = performance.now();
+  document.getElementById("qIdx").textContent = (State.idx+1);
+  document.getElementById("qTotal").textContent = State.queue.length;
+  document.getElementById("progBar").style.width = (100*State.idx/State.queue.length)+"%";
+  document.getElementById("feedback").innerHTML = q.isReview ? '<span class="review-tag">REVIEW</span> Get it this time!' : '';
+  renderNote("stave", State.clef, q.note);
+  const cdiv = document.getElementById("choices");
+  cdiv.innerHTML = "";
+  q.choices.forEach((ch,i)=>{
+    const b = document.createElement("div");
+    b.className = "choice";
+    b.innerHTML = `<span class="kbd">${i+1}</span>${escapeHtml(ch)}`;
+    b.dataset.value = ch;
+    b.addEventListener("click", ()=>onAnswer(b, ch));
+    cdiv.appendChild(b);
+  });
+}
+function escapeHtml(s){ return String(s).replace(/[&<>\"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c])); }
+
+function onAnswer(btn, ch){
+  const q = State.current;
+  if(!q) return;
+  if(!State.firstAnswered){
+    State.firstAnswered = true;
+    if(State.isAdvanced){
+      if(!State.startedAt) State.startedAt = performance.now();
+    } else if(!State.isPractice){
+      State.startedAt = performance.now();
+    }
+    if(!State.isPractice) startTimerLoop();
+  }
+  document.querySelectorAll("#choices .choice").forEach(b=>b.classList.add("disabled"));
+  State.totalAnswered++;
+  const isCorrect = (ch === q.correct);
+  const ms = performance.now() - (State.questionStart||performance.now());
+  // Record stats per question
+  Stats.record({
+    instKey: State.instKey, diff: State.diff, clef: State.clef,
+    mode: State.mode, midi: q.note.midi, correct: isCorrect, ms
+  });
+  // Assignment session log
+  if(State.assignment){
+    State.assignment.log.push({
+      midi:q.note.midi, name:q.note.letter+(q.note.acc||""), clef:State.clef,
+      correct:isCorrect, given:ch, expected:q.correct, ms, t:Date.now(), isReview:!!q.isReview
+    });
+    Assignment.persist();
+    Assignment.renderGoalsCard();
+    // Mid-question goal completion (e.g. answer counts) → finish immediately after this answer settles
+    const _r = Assignment.checkGoals();
+    if(_r.allDone){ State.assignment._pendingDone = _r; }
+  }
+  const sw = document.getElementById("staveWrap");
+  if(isCorrect){
+    btn.classList.add("correct");
+    State.totalCorrect++;
+    State.combo++;
+    State.maxCombo = Math.max(State.maxCombo, State.combo);
+    updateCombo();
+    sfx.good();
+    sw.classList.remove("flash-good"); void sw.offsetWidth; sw.classList.add("flash-good");
+    setTimeout(advanceQuestion, 280);
+  } else {
+    btn.classList.add("wrong");
+    document.querySelectorAll("#choices .choice").forEach(b=>{ if(b.dataset.value===q.correct) b.classList.add("correct"); });
+    State.wrong += 1;
+    State.combo = 0; updateCombo();
+    sfx.bad();
+    sw.classList.remove("flash-bad"); void sw.offsetWidth; sw.classList.add("flash-bad");
+    document.getElementById("wrongCount").textContent = State.wrong;
+    addKo();
+    State.attempts[q.id] = (State.attempts[q.id]||0)+1;
+    const wait = State.attempts[q.id] >= 2 ? 3000 : 1000;
+    document.getElementById("feedback").innerHTML = `<b style="color:var(--bad)">✗</b> Answer: <b style="color:var(--good)">${escapeHtml(q.correct)}</b> · next in ${wait/1000}s`;
+    if(!State.isPractice && State.queue.length < 20){
+      const reviewQ = { ...q, id:q.id+"_r"+State.attempts[q.id], isReview:true };
+      const fresh = generateChoices(State.inst,State.clef,State.mode,q.note,pickChoiceCount(State.diff));
+      reviewQ.choices = fresh.choices; reviewQ.correct = fresh.correct;
+      State.queue.push(reviewQ);
+      if(State.attempts[q.id] >= 2 && State.queue.length < 20){
+        State.queue.splice(State.queue.length-1, 0, makeQuestion());
+      }
+      document.getElementById("qTotal").textContent = State.queue.length;
+    } else if(!State.isPractice){
+      State.overflowFail = true;
+    }
+    setTimeout(advanceQuestion, wait);
+  }
+}
+function updateCombo(){
+  const box = document.getElementById("comboBox");
+  const num = document.getElementById("comboNum");
+  if(State.combo >= 3){
+    box.style.display = ""; num.textContent = State.combo;
+    box.classList.toggle("fire", State.combo>=5);
+    box.classList.toggle("fire2", State.combo>=10);
+  } else { box.style.display = "none"; }
+}
+function addKo(){
+  const x = document.createElement("span"); x.className = "x";
+  document.getElementById("koList").appendChild(x);
+}
+
+function advanceQuestion(){
+  // Assignment goal completion (mid-queue): finalize once goals are met
+  if(State.assignment && State.assignment._pendingDone){
+    const r = State.assignment._pendingDone;
+    State.assignment._pendingDone = null;
+    return Assignment.showCompletion(r);
+  }
+  State.idx += 1;
+  if(State.isAdvanced){
+    const elapsed = (performance.now()-State.startedAt)/1000;
+    if(elapsed > 60){ return endLevel(false, "Time! 60 seconds is up across all advanced levels."); }
+  }
+  if(State.isPractice){
+    // endless: append a new question if we hit the end
+    if(State.idx >= State.queue.length) State.queue.push(makeQuestion());
+    document.getElementById("qTotal").textContent = State.queue.length;
+  }
+  if(State.idx >= State.queue.length){
+    return endLevel(true);
+  }
+  showQuestion();
+}
+
+/* -------------------------------- Timer ----------------------------------- */
+let timerHandle = null;
+function startTimerLoop(){
+  stopTimer();
+  timerHandle = setInterval(()=>{
+    const elapsed = State.startedAt ? (performance.now()-State.startedAt)/1000 : 0;
+    document.getElementById("timer").textContent = elapsed.toFixed(1)+"s";
+  }, 100);
+}
+function stopTimer(){ if(timerHandle){ clearInterval(timerHandle); timerHandle=null; } }
+
+/* -------------------------------- End level ------------------------------- */
+function endLevel(passedQueue, advFailMsg){
+  const elapsed = State.startedAt ? (performance.now()-State.startedAt)/1000 : 0;
+  const maxWrong = maxWrongFor(State.diff);
+  let passed = passedQueue && !State.overflowFail;
+  if(advFailMsg){ passed = false; }
+  if(State.isPractice) passed = true;
+  if(!State.isAdvanced && !State.isPractice){
+    if(elapsed > 60) passed = false;
+    if(State.wrong > maxWrong) passed = false;
+  }
+  // Advanced: auto-chain into next level if cleared queue and not final
+  if(State.isAdvanced && passed && State.level < 5){
+    State.level += 1;
+    return startLevel();
+  }
+  stopTimer();
+  const save = Save.load();
+  const diff = State.diff;
+  const maxLvl = State.isAdvanced ? 5 : 10;
+
+  // Render result card
+  const box = document.getElementById("resultBox");
+  let html = "";
+  if(passed){
+    confetti();
+    sfx.win();
+    const accuracy = State.totalAnswered ? Math.round(100*State.totalCorrect/State.totalAnswered) : 100;
+    html += `<div class="alert success"><h2 style="margin:0 0 8px">${State.isPractice?'Practice session done 🧘':'Level '+State.level+' cleared! ✅'}</h2>
+      <div class="stats-row" style="margin-top:8px">
+        <div class="stat">⏱ <b>${elapsed.toFixed(1)}s</b></div>
+        <div class="stat">❌ <b>${State.wrong}</b>${maxWrong===Infinity?'':' / '+maxWrong}</div>
+        <div class="stat">🎯 <b>${accuracy}%</b></div>
+        <div class="stat">🔥 <b>${State.maxCombo}</b> max combo</div>
+      </div></div>`;
+    if(!State.isPractice){
+      save["best_"+diff] = Math.max(save["best_"+diff]||0, State.level);
+    }
+    if(!State.isPractice && State.level >= maxLvl){
+      save["mastered_"+diff] = true;
+      html += `<div class="alert success" style="margin-top:10px"><h3 style="margin:0">🏆 You MASTERED ${diff.toUpperCase()} mode!</h3>`;
+      if(diff==="hard"){
+        html += `<div style="margin-top:6px">⚡ <b>ADVANCED MODE UNLOCKED</b> — 5 levels, 10 questions each, <b>60 seconds total</b>.</div>`;
+      } else if(diff==="advanced"){
+        html += `<div style="margin-top:6px">You are a true note-reading champion. Try a different instrument or clef!</div>`;
+      }
+      html += `</div>`;
+    }
+  } else {
+    let reason = State.overflowFail ? "You filled the review queue (20). Review fundamentals and try again — you've got this!"
+               : advFailMsg ? advFailMsg
+               : (elapsed>60 ? "Over 60s. Speed up your reading!"
+                  : `Too many wrong (${State.wrong} > ${maxWrong}). Try again — every mistake is a step forward.`);
+    sfx.lose();
+    const accuracy = State.totalAnswered ? Math.round(100*State.totalCorrect/State.totalAnswered) : 0;
+    html += `<div class="alert warn"><h2 style="margin:0 0 8px">Not quite — try again!</h2>
+      <div class="stats-row" style="margin-top:8px">
+        <div class="stat">⏱ <b>${elapsed.toFixed(1)}s</b></div>
+        <div class="stat">❌ <b>${State.wrong}</b>${maxWrong===Infinity?'':' / '+maxWrong}</div>
+        <div class="stat">🎯 <b>${accuracy}%</b></div>
+      </div>
+      <div style="margin-top:10px">${reason}</div></div>`;
+  }
+  Save.save(save);
+  // Record session stats per-instrument
+  if(!State.isPractice){
+    Stats.recordSession({
+      instKey: State.instKey, diff, level: State.level, passed,
+      maxCombo: State.maxCombo, mastered: !!save["mastered_"+diff],
+    });
+  }
+  // Assignment goal check
+  if(State.assignment){
+    const result = Assignment.checkGoals();
+    if(result.allDone){
+      return Assignment.showCompletion(result);
+    }
+  }
+  document.getElementById("btnNext").style.display =
+    (passed && State.level < maxLvl) ? "" : "none";
+
+  document.getElementById("resultBox").innerHTML = html;
+  toScreen("results");
+}
+
+/* ============================== AUDIO ENGINE ============================== */
+const sfx = (() => {
+  let actx = null;
+  function ctx(){ if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)(); return actx; }
+  function tone(freq, dur=0.12, type="sine", vol=0.18, when=0){
+    if(!State.sound) return;
+    const a = ctx(); const t0 = a.currentTime + when;
+    const o = a.createOscillator(); const g = a.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(vol, t0+0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    o.connect(g).connect(a.destination);
+    o.start(t0); o.stop(t0+dur+0.02);
+  }
+  return {
+    good(){ tone(880,0.09,"triangle",0.18); tone(1320,0.12,"triangle",0.14,0.06); },
+    bad(){ tone(220,0.18,"sawtooth",0.16); tone(165,0.22,"sawtooth",0.14,0.05); },
+    win(){ [523,659,784,1047].forEach((f,i)=>tone(f,0.16,"triangle",0.16,i*0.09)); },
+    lose(){ [440,330,247].forEach((f,i)=>tone(f,0.22,"sine",0.16,i*0.12)); },
+    click(){ tone(660,0.04,"square",0.08); },
+  };
+})();
+
+/* ============================== CONFETTI ================================== */
+function confetti(){
+  const host = document.getElementById("confettiHost");
+  host.innerHTML = "";
+  const wrap = document.createElement("div"); wrap.className="confetti";
+  const colors = ["#a78bfa","#22d3ee","#f472b6","#34d399","#fbbf24","#fb923c"];
+  for(let i=0;i<80;i++){
+    const c = document.createElement("i");
+    c.style.left = (Math.random()*100)+"vw";
+    c.style.background = colors[i%colors.length];
+    c.style.animationDelay = (Math.random()*0.4)+"s";
+    c.style.transform = `rotate(${Math.random()*360}deg)`;
+    wrap.appendChild(c);
+  }
+  host.appendChild(wrap);
+  setTimeout(()=>{ host.innerHTML=""; }, 2200);
+}
+
+/* ============================== TOAST ===================================== */
+function showToast(msg, ms=2000){
+  const t = document.createElement("div"); t.className="toast"; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), ms+700);
+}
+
+/* ============================== TABS ====================================== */
+document.querySelectorAll("#menuTabs .tab").forEach(t=>{
+  t.addEventListener("click", ()=>switchTab(t.dataset.tab));
+});
+function switchTab(name){
+  document.querySelectorAll("#menuTabs .tab").forEach(t=>t.classList.toggle("active", t.dataset.tab===name));
+  document.getElementById("tabPlay").classList.toggle("hide", name!=="play");
+  document.getElementById("tabStats").classList.toggle("hide", name!=="stats");
+  document.getElementById("tabHelp").classList.toggle("hide", name!=="help");
+  if(name==="stats") renderStats();
+}
+
+/* ============================== STATS PANEL =============================== */
+function populateStatsInst(){
+  const sel = document.getElementById("statsInst");
+  if(!sel) return;
+  sel.innerHTML = "";
+  const groups = {brass:"Brass", ww:"Woodwinds"};
+  const byFam = {};
+  Object.keys(INSTRUMENTS).forEach(k=>{ const f=INSTRUMENTS[k].family; (byFam[f]||=[]).push(k); });
+  for(const f of ["brass","ww"]){
+    const og = document.createElement("optgroup"); og.label = groups[f];
+    byFam[f].forEach(k=>{
+      const o=document.createElement("option"); o.value=k; o.textContent=INSTRUMENTS[k].name; og.appendChild(o);
+    });
+    sel.appendChild(og);
+  }
+  sel.value = elInst.value || "trumpet";
+  sel.addEventListener("change", renderStats);
+}
+function renderStats(){
+  const sel = document.getElementById("statsInst");
+  const key = sel.value;
+  const inst = INSTRUMENTS[key];
+  const s = Stats.get(key);
+  const body = document.getElementById("statsBody");
+  const acc = fmtPct(s.correct, s.answered);
+  const avgMs = s.answered ? Math.round(s.timeMs / s.answered) : 0;
+
+  // Per-difficulty cards
+  const diffRows = ["easy","normal","hard","advanced","practice"].map(d=>{
+    const e = s.byDiff[d]||{a:0,c:0};
+    const lvl = (s.bestLevel&&s.bestLevel[d])||0;
+    const max = d==="advanced"?5: d==="practice"?"∞":10;
+    const m = s.mastered&&s.mastered[d];
+    return `<div class="stats-cell">
+      <div class="k">${d} ${m?'<span class="pill good" style="margin-left:4px">★</span>':''}</div>
+      <div class="v">${fmtPct(e.c,e.a)}</div>
+      <div class="small muted">${e.c}/${e.a} · best L${lvl}/${max}</div>
+    </div>`;
+  }).join("");
+
+  // Per-clef cards
+  const clefRows = ["treble","bass","tenor"].map(c=>{
+    const e = s.byClef[c]||{a:0,c:0};
+    if(e.a===0) return "";
+    return `<div class="stats-cell"><div class="k">${c} clef</div>
+      <div class="v">${fmtPct(e.c,e.a)}</div>
+      <div class="small muted">${e.c}/${e.a}</div></div>`;
+  }).filter(Boolean).join("");
+
+  // Per-mode
+  const modeRows = ["letter","fingering"].map(m=>{
+    const e = s.byMode[m]||{a:0,c:0};
+    if(e.a===0) return "";
+    return `<div class="stats-cell"><div class="k">${m} mode</div>
+      <div class="v">${fmtPct(e.c,e.a)}</div>
+      <div class="small muted">${e.c}/${e.a}</div></div>`;
+  }).filter(Boolean).join("");
+
+  // Toughest notes (lowest accuracy with at least 3 attempts)
+  const noteEntries = Object.entries(s.perNote)
+    .map(([m,e])=>({m:+m, a:e.a, c:e.c, acc:e.a?e.c/e.a:1}))
+    .filter(n=>n.a>=3)
+    .sort((x,y)=>x.acc-y.acc);
+  const toughest = noteEntries.slice(0,8).map(n=>
+    `<div class="stats-cell"><div class="k">${noteName(n.m)}</div>
+      <div class="v" style="color:${n.acc<0.5?'var(--bad)':n.acc<0.75?'var(--warn)':'var(--good)'}">${Math.round(n.acc*100)}%</div>
+      <div class="small muted">${n.c}/${n.a}</div></div>`).join("");
+  const strongest = noteEntries.slice().reverse().slice(0,5).map(n=>
+    `<div class="stats-cell"><div class="k">${noteName(n.m)}</div>
+      <div class="v" style="color:var(--good)">${Math.round(n.acc*100)}%</div>
+      <div class="small muted">${n.c}/${n.a}</div></div>`).join("");
+
+  // Recent trend (last 50 from noteHistory)
+  const recent = (s.noteHistory||[]).slice(-50);
+  const recentAcc = recent.length ? Math.round(100*recent.filter(x=>x.c).length/recent.length) : 0;
+
+  body.innerHTML = `
+    <div class="stats-grid">
+      <div class="stats-cell"><div class="k">Overall accuracy</div>
+        <div class="v">${acc}</div>
+        <div class="small muted">${s.correct}/${s.answered}</div></div>
+      <div class="stats-cell"><div class="k">Total questions</div><div class="v">${s.answered}</div></div>
+      <div class="stats-cell"><div class="k">Time spent</div><div class="v">${fmtMs(s.timeMs)}</div>
+        <div class="small muted">avg ${fmtMs(avgMs)}/Q</div></div>
+      <div class="stats-cell"><div class="k">Sessions</div><div class="v">${s.sessions}</div></div>
+      <div class="stats-cell"><div class="k">Max combo</div><div class="v">🔥 ${s.maxCombo}</div></div>
+      <div class="stats-cell"><div class="k">Recent 50 trend</div>
+        <div class="v">${recent.length?recentAcc+'%':'—'}</div>
+        <div class="small muted">last ${recent.length} answers</div></div>
+      <div class="stats-cell"><div class="k">First played</div>
+        <div class="v" style="font-size:14px">${s.firstPlayed?new Date(s.firstPlayed).toLocaleDateString():'—'}</div></div>
+      <div class="stats-cell"><div class="k">Last played</div>
+        <div class="v" style="font-size:14px">${s.lastPlayed?new Date(s.lastPlayed).toLocaleDateString():'—'}</div></div>
+    </div>
+
+    <h4 style="margin:18px 0 8px;color:var(--ink-2)">By difficulty</h4>
+    <div class="stats-grid">${diffRows}</div>
+
+    ${clefRows ? `<h4 style="margin:18px 0 8px;color:var(--ink-2)">By clef</h4>
+      <div class="stats-grid">${clefRows}</div>`:""}
+
+    ${modeRows ? `<h4 style="margin:18px 0 8px;color:var(--ink-2)">By answer mode</h4>
+      <div class="stats-grid">${modeRows}</div>`:""}
+
+    ${toughest ? `<h4 style="margin:18px 0 8px;color:var(--ink-2)">🎯 Notes you're working on</h4>
+      <div class="stats-grid">${toughest}</div>`:""}
+
+    ${strongest ? `<h4 style="margin:18px 0 8px;color:var(--ink-2)">💪 Notes you've mastered</h4>
+      <div class="stats-grid">${strongest}</div>`:""}
+  `;
+}
+document.getElementById("btnExportStats")?.addEventListener("click", ()=>{
+  const data = JSON.stringify(Save.load(), null, 2);
+  const blob = new Blob([data], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = "clefquest-stats.json"; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+});
+document.getElementById("btnReset").addEventListener("click", ()=>{
+  if(confirm("Reset all progress, mastery and stats?")){
+    localStorage.removeItem("nrg_save");
+    document.getElementById("optAdvanced").disabled = true;
+    document.getElementById("optAdvanced").textContent = "⚡ Advanced (locked)";
+    document.getElementById("advBadge").classList.add("hide");
+    renderStats(); updateProgressBox();
+    showToast("Progress reset");
+  }
+});
+
+/* =========================== SOUND/THEME/HELP ============================= */
+document.getElementById("btnSound").addEventListener("click", ()=>{
+  State.sound = !State.sound;
+  const b = document.getElementById("btnSound");
+  b.textContent = State.sound ? "🔊" : "🔇";
+  b.classList.toggle("on", State.sound);
+});
+const THEMES = [
+  /* Aurora (default) */ { p:"#a78bfa", a:"#22d3ee", c:"#f472b6", b1:"#7c3aed", b2:"#06b6d4", b3:"#ec4899" },
+  /* Sunset       */ { p:"#fb923c", a:"#f472b6", c:"#fbbf24", b1:"#ea580c", b2:"#db2777", b3:"#f59e0b" },
+  /* Forest       */ { p:"#34d399", a:"#22d3ee", c:"#a3e635", b1:"#059669", b2:"#0891b2", b3:"#65a30d" },
+  /* Mono         */ { p:"#cbd5e1", a:"#94a3b8", c:"#64748b", b1:"#475569", b2:"#334155", b3:"#1e293b" },
+];
+function applyTheme(i){
+  const t = THEMES[i % THEMES.length];
+  document.documentElement.style.setProperty("--accent", t.p);
+  document.documentElement.style.setProperty("--accent-2", t.a);
+  document.documentElement.style.setProperty("--accent-3", t.c);
+  document.querySelector(".blob.b1").style.background = t.b1;
+  document.querySelector(".blob.b2").style.background = t.b2;
+  document.querySelector(".blob.b3").style.background = t.b3;
+}
+document.getElementById("btnTheme").addEventListener("click", ()=>{
+  State.theme = (State.theme+1) % THEMES.length;
+  applyTheme(State.theme);
+  showToast("Theme: "+["Aurora","Sunset","Forest","Mono"][State.theme]);
+});
+document.getElementById("btnHelp").addEventListener("click", ()=>{
+  toScreen("setup"); switchTab("help");
+});
+
+/* =========================== KEYBOARD SHORTCUTS =========================== */
+document.addEventListener("keydown", (e)=>{
+  // ignore typing in selects/inputs
+  if(e.target && (e.target.tagName==="SELECT"||e.target.tagName==="INPUT")) return;
+  const inGame = !document.getElementById("game").classList.contains("hide");
+  const inSetup = !document.getElementById("setup").classList.contains("hide");
+  const inResults = !document.getElementById("results").classList.contains("hide");
+  const k = e.key.toLowerCase();
+  if(inGame){
+    if(/^[1-5]$/.test(e.key)){
+      const idx = parseInt(e.key)-1;
+      const choices = document.querySelectorAll("#choices .choice:not(.disabled)");
+      if(choices[idx]) choices[idx].click();
+    } else if(k==="escape"){ document.getElementById("btnQuit").click(); }
+  }
+  if(inResults){
+    if(k==="enter"){
+      const next = document.getElementById("btnNext");
+      if(next.style.display!=="none") next.click(); else document.getElementById("btnRetry").click();
+    } else if(k==="escape"){ document.getElementById("btnMenu").click(); }
+  }
+  if(inSetup){
+    if(k==="enter"){ document.getElementById("btnStart").click(); }
+  }
+  if(k==="s"){ document.getElementById("btnSound").click(); }
+  else if(k==="t"){ document.getElementById("btnTheme").click(); }
+  else if(k==="h" && !inGame){ document.getElementById("btnHelp").click(); }
+});
+
+/* ============================ SECRET DEBUG (AAA) ========================== */
+let _aBuffer = [];
+document.addEventListener("keydown", (e)=>{
+  if(document.getElementById("setup").classList.contains("hide")) return;
+  if(e.target && (e.target.tagName==="SELECT"||e.target.tagName==="INPUT")) return;
+  if(e.key.toLowerCase()!=="a") { _aBuffer = []; return; }
+  const now = Date.now();
+  _aBuffer = _aBuffer.filter(t=>now-t<1500);
+  _aBuffer.push(now);
+  if(_aBuffer.length>=3){
+    _aBuffer = [];
+    const save = Save.load();
+    save.mastered_hard = true; // unlock advanced
+    save.debug_unlock = true;
+    Save.save(save);
+    document.getElementById("optAdvanced").disabled = false;
+    document.getElementById("optAdvanced").textContent = "⚡ Advanced (DEBUG)";
+    document.getElementById("advBadge").classList.remove("hide");
+    showToast("🛠 Debug: Advanced unlocked");
+    sfx.win();
+  }
+});
+
+/* ============================================================================
+ *                          ASSIGNMENT / TEACHER / STUDENT
+ * ============================================================================ */
+
+/* Base64 helpers (UTF-8 safe) */
+const B64 = {
+  enc(obj){ return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/=+$/,""); },
+  dec(s){ try{ s = s.replace(/-/g,"+").replace(/_/g,"/"); while(s.length%4) s+="="; return JSON.parse(decodeURIComponent(escape(atob(s)))); } catch{ return null; } },
+};
+
+/* Goal definitions */
+const GOAL_DEFS = {
+  answers:  { label:"Answer {n} questions",        params:[{k:"n",label:"N",def:20}] },
+  correct:  { label:"Get {n} correct answers",     params:[{k:"n",label:"N",def:15}] },
+  streak:   { label:"Get {n} correct in a row",    params:[{k:"n",label:"N",def:5}] },
+  accuracy: { label:"At least {pct}% accuracy (after {n} answered)", params:[{k:"pct",label:"%",def:80},{k:"n",label:"min",def:20}] },
+  level:    { label:"Clear Level {n} on {diff}",   params:[{k:"n",label:"Level",def:1},{k:"diff",label:"Difficulty",def:"easy",options:["easy","normal","hard","advanced"]}] },
+  master:   { label:"Master {diff}",               params:[{k:"diff",label:"Difficulty",def:"easy",options:["easy","normal","hard"]}] },
+  time:     { label:"Practice for {n} minutes",    params:[{k:"n",label:"Minutes",def:10}] },
+  combo:    { label:"Reach a combo of {n}",        params:[{k:"n",label:"N",def:8}] },
+};
+function goalLabel(g){
+  let s = GOAL_DEFS[g.kind].label;
+  for(const k of Object.keys(g.params||{})) s = s.replace("{"+k+"}", g.params[k]);
+  return s;
+}
+
+/* Assignment runtime module (student side) */
+const Assignment = (() => {
+  const STORE = "nrg_asg_progress";
+  function key(id){ return STORE+"_"+id; }
+  function loadProgress(id){
+    try{ return JSON.parse(localStorage.getItem(key(id))||"null"); } catch { return null; }
+  }
+  function saveProgress(id, p){ localStorage.setItem(key(id), JSON.stringify(p)); }
+  function persist(){
+    if(!State.assignment) return;
+    saveProgress(State.assignment.id, State.assignment);
+  }
+  function init(asg, existing){
+    const normalized = (asg.paths && asg.paths.length) ? asg : normalizeAssignment(asg);
+    State.assignment = existing || {
+      id: normalized.id, asg: normalized, student:null, log:[],
+      startedAt: Date.now(), completedAt: null,
+      sessions:0, levelsCleared:{},
+      chosenPathIdx: null,
+    };
+    // migrate older progress that lacked paths
+    if(!State.assignment.asg.paths || !State.assignment.asg.paths.length){
+      State.assignment.asg = normalizeAssignment(State.assignment.asg);
+    }
+    persist();
+  }
+  function setPath(idx){
+    State.assignment.chosenPathIdx = idx;
+    persist();
+  }
+  function currentPath(){
+    const a = State.assignment; if(!a) return null;
+    if(a.chosenPathIdx==null) return null;
+    return a.asg.paths[a.chosenPathIdx];
+  }
+  function setStudent(first, last){
+    State.assignment.student = {first, last, savedAt:Date.now()};
+    persist();
+  }
+  function checkGoals(){
+    const a = State.assignment; if(!a) return {allDone:false,goals:[]};
+    const log = a.log;
+    const correct = log.filter(x=>x.c||x.correct).length;
+    const answered = log.length;
+    let curStreak = 0, maxStreak = 0;
+    for(const x of log){ if(x.correct){ curStreak++; if(curStreak>maxStreak) maxStreak=curStreak; } else curStreak=0; }
+    const totalMs = log.reduce((s,x)=>s+(x.ms||0),0);
+    const accuracy = answered? (correct/answered*100) : 0;
+    const save = Save.load();
+    // Goals source: chosen path's goals (new), fallback to top-level (legacy)
+    const path = currentPath();
+    const goalList = path ? path.goals : (a.asg.goals||[]);
+    const goals = goalList.map(g=>{
+      let done=false, prog="0", target="";
+      const p = g.params||{};
+      switch(g.kind){
+        case "answers":  done=answered>=p.n; prog=`${answered}/${p.n}`; target=p.n; break;
+        case "correct":  done=correct>=p.n;  prog=`${correct}/${p.n}`;  target=p.n; break;
+        case "streak":   done=maxStreak>=p.n; prog=`${maxStreak}/${p.n}`; target=p.n; break;
+        case "accuracy": done=(answered>=p.n && accuracy>=p.pct); prog=`${Math.round(accuracy)}% (n=${answered}/${p.n})`; target=p.pct+"%"; break;
+        case "level":    { const lvl=save["best_"+p.diff]||0; done=lvl>=p.n; prog=`L${lvl}/${p.n}`; target=`L${p.n} ${p.diff}`; break; }
+        case "master":   done=!!save["mastered_"+p.diff]; prog=done?"yes":"no"; target=`master ${p.diff}`; break;
+        case "time":     { const m=Math.floor(totalMs/60000); done=m>=p.n; prog=`${m}/${p.n} min`; target=`${p.n} min`; break; }
+        case "combo":    done=State.maxCombo>=p.n; prog=`${State.maxCombo}/${p.n}`; target=p.n; break;
+      }
+      return {kind:g.kind, label:goalLabel(g), done, prog, target};
+    });
+    return { allDone: goals.length>0 && goals.every(g=>g.done), goals, accuracy, answered, correct, maxStreak, totalMs };
+  }
+  function showCompletion(result){
+    if(!State.assignment.completedAt) State.assignment.completedAt = Date.now();
+    persist();
+    sfx.win(); confetti();
+    document.getElementById("game").classList.add("hide");
+    document.getElementById("results").classList.add("hide");
+    document.getElementById("setup").classList.add("hide");
+    const card = document.getElementById("asgCompletion");
+    const body = document.getElementById("asgCompletionBody");
+    const a = State.assignment;
+    const goalsHtml = result.goals.map(g=>`<div class="stats-cell"><div class="k">${g.label}</div><div class="v" style="color:var(--good);font-size:16px">✓ ${g.prog}</div></div>`).join("");
+    const path = currentPath();
+    const submission = B64.enc({
+      v:2, asgId:a.id, asgName:a.asg.name,
+      classroom: !!a.asg.classroom,
+      chosenPath: path ? path.name : null,
+      chosenPathIdx: a.chosenPathIdx,
+      student:a.student,
+      startedAt:a.startedAt, completedAt:a.completedAt,
+      log:a.log, summary:{
+        answered:result.answered, correct:result.correct,
+        accuracy:Math.round(result.accuracy), maxStreak:result.maxStreak,
+        timeMs:result.totalMs, maxCombo:State.maxCombo,
+      }
+    });
+    const isClassroom = !!a.asg.classroom;
+    const submitInstructions = isClassroom
+      ? `<div class="alert" style="background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.3);color:#86efac;margin-top:14px">
+          <h3 style="margin:0 0 4px">🎓 Google Classroom mode</h3>
+          <div>Copy the code below, then go back to your Google Classroom assignment and <b>paste it into the private/assignment comment</b> so your teacher can record your submission.</div>
+        </div>`
+      : `<div class="small muted" style="margin-top:14px">Copy the code below and send it to your teacher however they asked (message, Classroom comment, email, etc.).</div>`;
+    body.innerHTML = `
+      <h2 style="margin:0 0 8px">Assignment complete</h2>
+      <div class="sub">Great work, ${escapeHtml(a.student.first)} ${escapeHtml(a.student.last)}.${path?' · Path: <b>'+escapeHtml(path.name)+'</b>':''}</div>
+      <div class="stats-row" style="margin-top:14px">
+        <div class="stat">📝 <b>${result.answered}</b> answered</div>
+        <div class="stat">✅ <b>${result.correct}</b> correct</div>
+        <div class="stat">🎯 <b>${Math.round(result.accuracy)}%</b></div>
+        <div class="stat">🔥 <b>${result.maxStreak}</b> streak</div>
+        <div class="stat">⏱ <b>${fmtMs(result.totalMs)}</b></div>
+      </div>
+      <h4 style="margin-top:14px">Goals you completed</h4>
+      <div class="stats-grid">${goalsHtml}</div>
+      ${submitInstructions}
+      <label style="margin-top:12px">Your submission code</label>
+      <textarea readonly id="asgSubmissionOut" rows="6" style="font-family:JetBrains Mono,monospace;font-size:11px">${submission}</textarea>
+      <div class="footer">
+        <button class="btn" id="btnCopySubmission">📋 Copy code</button>
+        <a class="btn secondary" href="?">Practice more</a>
+      </div>
+    `;
+    card.classList.remove("hide");
+    document.getElementById("asgGoalsCard").classList.add("hide");
+    // Auto-attempt to copy on arrival (browsers may block silently)
+    const ta = document.getElementById("asgSubmissionOut");
+    try {
+      ta.select();
+      if(navigator.clipboard) navigator.clipboard.writeText(submission).then(()=>{
+        if(isClassroom) showToast("Code copied — paste into Classroom comments");
+      }).catch(()=>{});
+    } catch {}
+    document.getElementById("btnCopySubmission").addEventListener("click", ()=>{
+      const ta2 = document.getElementById("asgSubmissionOut");
+      ta2.select();
+      if(navigator.clipboard) navigator.clipboard.writeText(ta2.value);
+      else document.execCommand("copy");
+      showToast("Copied to clipboard");
+    });
+  }
+  function renderGoalsCard(){
+    if(!State.assignment) return;
+    const r = checkGoals();
+    document.getElementById("asgGoalsCard").classList.remove("hide");
+    const html = r.goals.map(g=>`<div class="stats-cell">
+      <div class="k">${g.done?'<span style="color:var(--good)">✓</span>':'○'} ${g.label}</div>
+      <div class="v" style="color:${g.done?'var(--good)':'var(--ink)'}">${g.prog}</div>
+    </div>`).join("");
+    document.getElementById("asgGoalsList").innerHTML = html;
+  }
+  return { init, setStudent, setPath, currentPath, checkGoals, showCompletion, renderGoalsCard, persist, loadProgress };
+})();
+
+/* ----------------------------- TEACHER MODULE ----------------------------- */
+/* Normalize: accepts old-shape (single path) or new-shape (paths[]) */
+function normalizeAssignment(a){
+  if(a.paths && a.paths.length) return a;
+  const path = {
+    name: "Default",
+    instrument: a.instrument||null, diff: a.diff||null,
+    mode: a.mode||null, clef: a.clef||null,
+    goals: a.goals || [],
+  };
+  return {...a, paths:[path]};
+}
+
+const Teacher = (() => {
+  function load(){ const s=Save.load(); s.classroom = s.classroom || {assignments:[], submissions:{}, seenHashes:{}}; s.classroom.seenHashes = s.classroom.seenHashes || {}; return s; }
+  function persist(s){ Save.save(s); }
+
+  let pendingGoals = [];
+  let pendingPaths = [];
+
+  function renderGoalsList(){
+    const host = document.getElementById("goalsList");
+    if(!pendingGoals.length){ host.innerHTML = '<div class="small muted">No goals yet — add at least one.</div>'; return; }
+    host.innerHTML = pendingGoals.map((g,i)=>`<div class="stats-cell" style="display:flex;justify-content:space-between;align-items:center">
+      <div><b>${goalLabel(g)}</b></div>
+      <button class="btn ghost" data-rm="${i}" style="max-width:90px">Remove</button>
+    </div>`).join("");
+    host.querySelectorAll("[data-rm]").forEach(b=>b.addEventListener("click", e=>{
+      pendingGoals.splice(+e.target.dataset.rm,1); renderGoalsList();
+    }));
+  }
+  function renderPathsList(){
+    const host = document.getElementById("pathsList");
+    const hint = document.getElementById("pathEditHint");
+    if(hint) hint.textContent = `Path ${pendingPaths.length+1}`;
+    if(!pendingPaths.length){ host.innerHTML = '<div class="small muted">No paths yet. Configure one below and click "Add this path to assignment".</div>'; return; }
+    host.innerHTML = pendingPaths.map((p,i)=>{
+      const settings = [];
+      if(p.instrument) settings.push(INSTRUMENTS[p.instrument]?.name);
+      if(p.diff) settings.push(p.diff);
+      if(p.mode) settings.push(p.mode);
+      if(p.clef) settings.push(p.clef+" clef");
+      return `<div class="stats-cell" style="grid-column:1/-1">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+          <div>
+            <div class="k">Path ${i+1}</div>
+            <div style="font-weight:600;margin-bottom:4px">${escapeHtml(p.name||"(unnamed)")}</div>
+            <div class="small muted">${settings.join(' · ') || 'All settings student-choice'}</div>
+          </div>
+          <button class="btn ghost" data-rmp="${i}" style="max-width:90px">Remove</button>
+        </div>
+        <div style="margin-top:8px">${p.goals.map(g=>`<span class="pill">${goalLabel(g)}</span>`).join("")}</div>
+      </div>`;
+    }).join("");
+    host.querySelectorAll("[data-rmp]").forEach(b=>b.addEventListener("click", e=>{
+      pendingPaths.splice(+e.target.dataset.rmp,1); renderPathsList();
+    }));
+  }
+  function addGoalUI(){
+    const kind = document.getElementById("goalKind").value;
+    const def = GOAL_DEFS[kind];
+    const params = {};
+    for(const p of def.params){
+      let v;
+      if(p.options){
+        v = prompt(`${p.label} (${p.options.join(", ")})`, p.def);
+        if(!v) return;
+        if(!p.options.includes(v)){ alert("Invalid option"); return; }
+      } else {
+        v = prompt(`${p.label}`, p.def);
+        if(v===null) return;
+        v = isNaN(+v) ? v : +v;
+      }
+      params[p.k] = v;
+    }
+    pendingGoals.push({kind, params});
+    renderGoalsList();
+  }
+
+  function snapshotCurrentPath(){
+    return {
+      name: document.getElementById("pathName").value.trim() || `Path ${pendingPaths.length+1}`,
+      instrument: document.getElementById("aInst").value || null,
+      diff: document.getElementById("aDiff").value || null,
+      mode: document.getElementById("aMode").value || null,
+      clef: document.getElementById("aClef").value || null,
+      goals: pendingGoals.slice(),
+    };
+  }
+  function clearPathEditor(){
+    pendingGoals = [];
+    document.getElementById("pathName").value = "";
+    document.getElementById("aInst").value = "";
+    document.getElementById("aDiff").value = "";
+    document.getElementById("aMode").value = "";
+    document.getElementById("aClef").value = "";
+    renderGoalsList();
+  }
+  function addPathToAssignment(){
+    if(!pendingGoals.length){ alert("Add at least one goal to this path first."); return; }
+    pendingPaths.push(snapshotCurrentPath());
+    clearPathEditor();
+    renderPathsList();
+    showToast("Path added");
+  }
+
+  function createAssignment(){
+    const name = document.getElementById("aName").value.trim();
+    if(!name){ alert("Give the assignment a name"); return; }
+    // Auto-commit current editor if user forgot to click "Add path"
+    let paths = pendingPaths.slice();
+    if(pendingGoals.length){
+      paths.push(snapshotCurrentPath());
+    }
+    if(!paths.length){ alert("Add at least one goal path (configure a path below and click \"Add this path to assignment\")."); return; }
+    const a = {
+      id: Math.random().toString(36).slice(2,10),
+      name,
+      due: document.getElementById("aDue").value || null,
+      classroom: document.getElementById("aClassroom").checked,
+      paths,
+      createdAt: Date.now(),
+    };
+    const save = load();
+    save.classroom.assignments.unshift(a);
+    persist(save);
+    pendingGoals = []; pendingPaths = [];
+    document.getElementById("aName").value = "";
+    document.getElementById("aDue").value = "";
+    document.getElementById("aClassroom").checked = false;
+    clearPathEditor();
+    renderPathsList();
+    renderAssignments();
+    switchTeacherTab("t-assign");
+    showToast("Assignment created");
+  }
+
+  function buildLink(raw){
+    const a = normalizeAssignment(raw);
+    const enc = B64.enc({id:a.id, name:a.name, due:a.due, classroom:!!a.classroom, paths:a.paths});
+    const base = location.origin + location.pathname;
+    return `${base}?assignment=${enc}`;
+  }
+
+  function renderAssignments(){
+    const save = load();
+    const host = document.getElementById("assignList");
+    if(!save.classroom.assignments.length){ host.innerHTML = '<div class="small muted">No assignments yet. Use the Create tab.</div>'; return; }
+    host.innerHTML = save.classroom.assignments.map(raw=>{
+      const a = normalizeAssignment(raw);
+      const subs = save.classroom.submissions[a.id]||{};
+      const subCount = Object.keys(subs).length;
+      const due = a.due ? new Date(a.due).toLocaleDateString() : "no due date";
+      const badges = [];
+      if(a.classroom) badges.push('<span class="pill good">🎓 Classroom</span>');
+      badges.push(`<span class="pill">${a.paths.length} path${a.paths.length===1?'':'s'}</span>`);
+      const pathsHtml = a.paths.map((p,i)=>{
+        const settings = [];
+        if(p.instrument) settings.push(INSTRUMENTS[p.instrument]?.name);
+        if(p.diff) settings.push(p.diff);
+        if(p.mode) settings.push(p.mode);
+        const goals = p.goals.map(g=>`<span class="pill">${goalLabel(g)}</span>`).join("");
+        return `<div style="margin-top:8px;padding:8px 10px;background:var(--surface-2);border-radius:8px;border:1px solid var(--line-2)">
+          <div class="small" style="margin-bottom:4px"><b>${escapeHtml(p.name||'Path '+(i+1))}</b>${settings.length?' <span class="muted">— '+settings.join(' · ')+'</span>':''}</div>
+          ${goals}
+        </div>`;
+      }).join("");
+      return `<div class="stats-cell" style="grid-column:1/-1">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+          <div><div style="font-weight:600;font-size:15px">${escapeHtml(a.name)}</div>
+            <div class="small muted" style="margin-top:2px">Due: ${due} · ${subCount} submission${subCount===1?'':'s'}</div>
+            <div style="margin-top:6px">${badges.join(' ')}</div></div>
+          <div class="toolbar">
+            <button class="btn ghost" data-copy="${a.id}" style="max-width:130px">Copy link</button>
+            <button class="btn ghost" data-view="${a.id}" style="max-width:100px">View</button>
+            <button class="btn danger" data-del="${a.id}" style="max-width:90px">Delete</button>
+          </div>
+        </div>
+        ${pathsHtml}
+      </div>`;
+    }).join("");
+    host.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click", e=>{
+      const id = e.target.dataset.copy;
+      const a = save.classroom.assignments.find(x=>x.id===id);
+      const link = buildLink(a);
+      navigator.clipboard.writeText(link).then(()=>showToast("Link copied"), ()=>{
+        prompt("Copy this link:", link);
+      });
+    }));
+    host.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click", e=>{
+      const id = e.target.dataset.view;
+      renderRoster(id);
+      switchTeacherTab("t-roster");
+    }));
+    host.querySelectorAll("[data-del]").forEach(b=>b.addEventListener("click", e=>{
+      const id = e.target.dataset.del;
+      if(!confirm("Delete this assignment? Submissions are kept.")) return;
+      const s = load();
+      s.classroom.assignments = s.classroom.assignments.filter(x=>x.id!==id);
+      persist(s);
+      renderAssignments();
+    }));
+  }
+
+  // simple fast hash of string (djb2)
+  function quickHash(s){
+    let h = 5381;
+    for(let i=0;i<s.length;i++) h = (h*33) ^ s.charCodeAt(i);
+    return (h>>>0).toString(36);
+  }
+
+  function addSubmission(){
+    const raw = document.getElementById("submitInput").value.trim();
+    const fb = document.getElementById("submitFeedback");
+    if(!raw){ fb.innerHTML = '<div class="alert warn">Paste a submission code first.</div>'; return; }
+    const data = B64.dec(raw);
+    if(!data || !data.asgId || !data.student){
+      fb.innerHTML = '<div class="alert">Could not decode submission. Make sure the student copied the FULL code and pasted it correctly.</div>';
+      return;
+    }
+    const save = load();
+    save.classroom.submissions = save.classroom.submissions || {};
+    save.classroom.seenHashes = save.classroom.seenHashes || {};
+    const hash = quickHash(raw);
+    // Cheat detection — has this exact code been pasted before?
+    const seen = save.classroom.seenHashes[hash];
+    if(seen){
+      const seenDate = new Date(seen.at).toLocaleString();
+      fb.innerHTML = `<div class="alert warn"><h3 style="margin:0 0 6px">⚠ That code has been used already!</h3>
+        <div>It was first submitted on <b>${seenDate}</b> for <b>${escapeHtml(seen.student)}</b> (assignment: ${escapeHtml(seen.asgName)}).</div>
+        <div style="margin-top:6px">Ensure you didn't double-paste accidentally, and if you didn't, you may have a cheater on your hands — a student shared someone else's submission code.</div>
+        <div style="margin-top:8px"><button class="btn secondary" id="btnForceSubmit" style="max-width:240px">Accept anyway (overwrite)</button></div>
+      </div>`;
+      document.getElementById("btnForceSubmit").addEventListener("click", ()=>{
+        save.classroom.submissions[data.asgId] = save.classroom.submissions[data.asgId] || {};
+        const sk = (data.student.first+"_"+data.student.last).toLowerCase().replace(/\s+/g,"_");
+        save.classroom.submissions[data.asgId][sk] = data;
+        save.classroom.seenHashes[hash] = {at:Date.now(), student:`${data.student.first} ${data.student.last}`, asgName:data.asgName||data.asgId};
+        persist(save);
+        document.getElementById("submitInput").value = "";
+        fb.innerHTML = `<div class="alert success">Submission accepted despite duplicate warning.</div>`;
+        renderAssignments(); renderRoster();
+      });
+      return;
+    }
+    save.classroom.submissions[data.asgId] = save.classroom.submissions[data.asgId] || {};
+    const studentKey = (data.student.first+"_"+data.student.last).toLowerCase().replace(/\s+/g,"_");
+    save.classroom.submissions[data.asgId][studentKey] = data;
+    save.classroom.seenHashes[hash] = {at:Date.now(), student:`${data.student.first} ${data.student.last}`, asgName:data.asgName||data.asgId};
+    persist(save);
+    document.getElementById("submitInput").value = "";
+    fb.innerHTML = `<div class="alert success">Added submission from <b>${escapeHtml(data.student.first)} ${escapeHtml(data.student.last)}</b> for <b>${escapeHtml(data.asgName||data.asgId)}</b> — ${data.summary?.answered||0} answered, ${data.summary?.accuracy||0}% accuracy${data.chosenPath?', path "'+escapeHtml(data.chosenPath)+'"':''}.</div>`;
+    renderAssignments();
+    renderRoster();
+  }
+
+  function renderRoster(focusAsgId){
+    const save = load();
+    const host = document.getElementById("rosterTable");
+    const assignments = save.classroom.assignments;
+    if(!assignments.length){ host.innerHTML = '<div class="small muted">No assignments yet.</div>'; return; }
+    // collect all student keys across all submissions
+    const studentMap = {};
+    for(const aid of Object.keys(save.classroom.submissions||{})){
+      for(const sk of Object.keys(save.classroom.submissions[aid])){
+        const d = save.classroom.submissions[aid][sk];
+        studentMap[sk] = studentMap[sk] || d.student;
+      }
+    }
+    const studentKeys = Object.keys(studentMap);
+    if(!studentKeys.length){ host.innerHTML = '<div class="small muted">No submissions received yet.</div>'; return; }
+    let html = `<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>
+      <th style="text-align:left;padding:8px;border-bottom:1px solid var(--line)">Student</th>
+      ${assignments.map(a=>`<th style="padding:8px;border-bottom:1px solid var(--line);text-align:center">${escapeHtml(a.name)}</th>`).join("")}
+    </tr></thead><tbody>`;
+    for(const sk of studentKeys){
+      const st = studentMap[sk];
+      html += `<tr><td style="padding:8px;border-bottom:1px solid var(--line)"><a href="#" data-st="${sk}" style="color:var(--accent);text-decoration:none">${escapeHtml(st.first)} ${escapeHtml(st.last)}</a></td>`;
+      for(const a of assignments){
+        const sub = save.classroom.submissions[a.id]?.[sk];
+        if(sub){
+          const acc = sub.summary?.accuracy ?? 0;
+          html += `<td style="padding:8px;border-bottom:1px solid var(--line);text-align:center"><a href="#" data-st="${sk}" data-as="${a.id}" style="color:var(--good);text-decoration:none">✓ ${acc}%</a></td>`;
+        } else {
+          html += `<td style="padding:8px;border-bottom:1px solid var(--line);text-align:center;color:var(--ink-3)">—</td>`;
+        }
+      }
+      html += "</tr>";
+    }
+    html += "</tbody></table>";
+    host.innerHTML = html;
+    host.querySelectorAll("[data-st]").forEach(a=>a.addEventListener("click", e=>{
+      e.preventDefault();
+      drillStudent(e.target.dataset.st, e.target.dataset.as);
+    }));
+    if(focusAsgId){ /* could highlight column */ }
+  }
+
+  function drillStudent(sk, asgId){
+    const save = load();
+    const card = document.getElementById("studentDrillCard");
+    const host = document.getElementById("studentDrill");
+    let assignments = save.classroom.assignments;
+    let html = "";
+    let st = null;
+    for(const a of assignments){
+      const sub = save.classroom.submissions[a.id]?.[sk]; if(!sub) continue;
+      st = sub.student;
+      if(asgId && a.id!==asgId) continue;
+      const log = sub.log || [];
+      const answered = log.length;
+      const correct = log.filter(x=>x.correct).length;
+      const totalMs = log.reduce((s,x)=>s+(x.ms||0),0);
+      const times = log.filter(x=>x.ms).map(x=>x.ms).sort((a,b)=>a-b);
+      const avgMs = answered?Math.round(totalMs/answered):0;
+      const medianMs = times.length?times[Math.floor(times.length/2)]:0;
+      const fastCorrect = log.filter(x=>x.correct&&x.ms).reduce((m,x)=>x.ms<m?x.ms:m, Infinity);
+      const slowest = log.reduce((m,x)=>(x.ms||0)>m?(x.ms||0):m, 0);
+      // streak
+      let curStreak=0, maxStreak=0;
+      for(const x of log){ if(x.correct){ curStreak++; if(curStreak>maxStreak) maxStreak=curStreak; } else curStreak=0; }
+      // by clef
+      const byClef = {};
+      for(const x of log){ const c=x.clef||'?'; byClef[c]=byClef[c]||{a:0,c:0}; byClef[c].a++; if(x.correct) byClef[c].c++; }
+      // per-note
+      const perNote = {};
+      for(const x of log){ const k=x.name||x.midi; perNote[k]=perNote[k]||{a:0,c:0,midi:x.midi,name:x.name}; perNote[k].a++; if(x.correct) perNote[k].c++; }
+      const noteArr = Object.values(perNote).filter(n=>n.a>=2).sort((x,y)=>(x.c/x.a)-(y.c/y.a));
+      const toughest = noteArr.slice(0,8);
+      // review stats
+      const reviews = log.filter(x=>x.isReview).length;
+      const reviewCorrect = log.filter(x=>x.isReview && x.correct).length;
+      // time to complete
+      const totalDuration = (sub.completedAt && sub.startedAt) ? (sub.completedAt - sub.startedAt) : 0;
+      const attempts = sub.attempts || 1;
+      const wrong = log.filter(x=>!x.correct);
+      const wrongHtml = wrong.slice(0,30).map(x=>`<div class="stats-cell" style="padding:10px">
+        <div class="k">${escapeHtml(x.name||'')} <span class="muted">· ${escapeHtml(x.clef||'')}</span></div>
+        <div class="small">expected <b>${escapeHtml(x.expected||'')}</b> · gave <b style="color:var(--bad)">${escapeHtml(x.given||'')}</b></div>
+        <div class="small muted">${x.ms?(x.ms/1000).toFixed(1)+'s':''}${x.isReview?' · review':''}</div>
+      </div>`).join("");
+      const clefHtml = Object.entries(byClef).map(([c,e])=>`<div class="stats-cell"><div class="k">${c} clef</div><div class="v">${e.a?Math.round(100*e.c/e.a):0}%</div><div class="small muted">${e.c}/${e.a}</div></div>`).join("");
+      const toughestHtml = toughest.map(n=>`<div class="stats-cell"><div class="k">${escapeHtml(n.name||noteName(n.midi))}</div><div class="v" style="color:var(--bad)">${Math.round(100*n.c/n.a)}%</div><div class="small muted">${n.c}/${n.a}</div></div>`).join("");
+
+      html += `<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line-2)">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <h3 style="margin:0">${escapeHtml(a.name)}</h3>
+          <div>
+            ${sub.chosenPath?`<span class="pill">Path: ${escapeHtml(sub.chosenPath)}</span>`:''}
+            ${a.classroom?'<span class="pill good">🎓 Classroom</span>':''}
+          </div>
+        </div>
+        <div class="small muted">Submitted ${sub.completedAt?new Date(sub.completedAt).toLocaleString():'—'}${sub.startedAt?' · started '+new Date(sub.startedAt).toLocaleString():''}</div>
+
+        <div class="stats-grid" style="margin-top:12px">
+          <div class="stats-cell"><div class="k">Accuracy</div><div class="v">${sub.summary?.accuracy||Math.round(100*correct/Math.max(1,answered))}%</div><div class="small muted">${correct}/${answered}</div></div>
+          <div class="stats-cell"><div class="k">Total time</div><div class="v">${fmtMs(totalMs)}</div><div class="small muted">${totalDuration?'session '+fmtMs(totalDuration):''}</div></div>
+          <div class="stats-cell"><div class="k">Avg / question</div><div class="v">${fmtMs(avgMs)}</div><div class="small muted">median ${fmtMs(medianMs)}</div></div>
+          <div class="stats-cell"><div class="k">Fastest correct</div><div class="v">${fastCorrect===Infinity?'—':fmtMs(fastCorrect)}</div></div>
+          <div class="stats-cell"><div class="k">Slowest</div><div class="v">${fmtMs(slowest)}</div></div>
+          <div class="stats-cell"><div class="k">Max streak</div><div class="v">🔥 ${maxStreak}</div></div>
+          <div class="stats-cell"><div class="k">Reviews encountered</div><div class="v">${reviews}</div><div class="small muted">${reviewCorrect}/${reviews} correct</div></div>
+          <div class="stats-cell"><div class="k">Total misses</div><div class="v">${wrong.length}</div></div>
+        </div>
+
+        ${clefHtml ? `<h4 style="margin:14px 0 6px">By clef</h4><div class="stats-grid">${clefHtml}</div>` : ''}
+        ${toughestHtml ? `<h4 style="margin:14px 0 6px">Notes they struggled with</h4><div class="stats-grid">${toughestHtml}</div>` : ''}
+        ${wrongHtml ? `<h4 style="margin:14px 0 6px">Every missed question (first 30)</h4><div class="stats-grid">${wrongHtml}</div>` : '<div class="small muted" style="margin-top:10px">No misses — perfect run</div>'}
+      </div>`;
+    }
+    if(!st){ host.innerHTML = '<div class="small muted">No data.</div>'; card.classList.remove("hide"); return; }
+    host.innerHTML = `<h2 style="margin:0">${escapeHtml(st.first)} ${escapeHtml(st.last)}</h2>
+      <div class="small muted">Submissions across assignments</div>${html}
+      <div class="footer"><button class="btn ghost" id="btnCloseDrill">Close</button></div>`;
+    document.getElementById("btnCloseDrill").addEventListener("click", ()=>card.classList.add("hide"));
+    card.classList.remove("hide");
+    card.scrollIntoView({behavior:"smooth", block:"start"});
+  }
+
+  function switchTeacherTab(name){
+    document.querySelectorAll("#teacherTabs .tab").forEach(t=>t.classList.toggle("active", t.dataset.tab===name));
+    ["t-assign","t-roster","t-submit","t-create"].forEach(id=>{
+      document.getElementById("t-tab-"+id.slice(2)).classList.toggle("hide", id!==name);
+    });
+    if(name==="t-assign") renderAssignments();
+    if(name==="t-roster") renderRoster();
+  }
+
+  function init(){
+    // populate instrument dropdown for create form
+    const aInst = document.getElementById("aInst");
+    const groups = {brass:"Brass", ww:"Woodwinds"};
+    const byFam = {};
+    Object.keys(INSTRUMENTS).forEach(k=>{ const f=INSTRUMENTS[k].family; (byFam[f]||=[]).push(k); });
+    for(const f of ["brass","ww"]){
+      const og = document.createElement("optgroup"); og.label = groups[f];
+      byFam[f].forEach(k=>{ const o=document.createElement("option"); o.value=k; o.textContent=INSTRUMENTS[k].name; og.appendChild(o); });
+      aInst.appendChild(og);
+    }
+    document.querySelectorAll("#teacherTabs .tab").forEach(t=>t.addEventListener("click", ()=>switchTeacherTab(t.dataset.tab)));
+    document.getElementById("btnAddGoal").addEventListener("click", addGoalUI);
+    document.getElementById("btnAddPath").addEventListener("click", addPathToAssignment);
+    document.getElementById("btnCreateAssign").addEventListener("click", createAssignment);
+    document.getElementById("btnAddSubmission").addEventListener("click", addSubmission);
+    renderGoalsList();
+    renderPathsList();
+    renderAssignments();
+  }
+
+  return { init, switchTeacherTab };
+})();
+
+/* ----------------------------- ROUTING ------------------------------------ */
+function showApp(which){
+  document.getElementById("teacherApp").classList.toggle("hide", which!=="teacher");
+  document.getElementById("studentApp").classList.toggle("hide", which!=="student");
+  document.querySelector(".app").classList.toggle("hide", which!=="game");
+}
+
+function bootStudent(asgEnc){
+  const rawAsg = B64.dec(asgEnc);
+  if(!rawAsg){ alert("This assignment link is invalid."); return; }
+  const asg = normalizeAssignment(rawAsg);
+  showApp("student");
+  document.getElementById("asgTitle").textContent = asg.name || "Assignment";
+  const dueTxt = asg.due ? "Due "+new Date(asg.due).toLocaleDateString() : "No due date";
+  const metaBits = [dueTxt];
+  if(asg.classroom) metaBits.push("🎓 Google Classroom");
+  metaBits.push(`${asg.paths.length} path${asg.paths.length===1?'':'s'}`);
+  document.getElementById("asgMeta").textContent = metaBits.join(" · ");
+  // sound toggle
+  document.getElementById("btnSound2").addEventListener("click", ()=>{
+    State.sound = !State.sound;
+    const b = document.getElementById("btnSound2");
+    b.textContent = State.sound?"🔊":"🔇"; b.classList.toggle("on", State.sound);
+  });
+  // Resume or new
+  let prog = Assignment.loadProgress(asg.id);
+  // Re-entry policy: if completed, only allow within 30d AND before due date
+  if(prog && prog.completedAt){
+    const days = (Date.now()-prog.completedAt)/86400000;
+    const beforeDue = !asg.due || (Date.now() <= new Date(asg.due).getTime()+86400000);
+    if(days <= 30 && beforeDue){
+      Assignment.init(asg, prog);
+      showCompletedView(prog, asg);
+      return;
+    } else {
+      prog = null;
+    }
+  }
+  if(prog && prog.student){
+    Assignment.init(asg, prog);
+    if(prog.chosenPathIdx==null && asg.paths.length>1) showPathPicker(asg);
+    else startStudentSession(asg);
+  } else {
+    document.getElementById("asgNamePrompt").classList.remove("hide");
+    document.getElementById("btnStartAsg").addEventListener("click", ()=>{
+      const f = document.getElementById("snFirst").value.trim();
+      const l = document.getElementById("snLast").value.trim();
+      if(!f || !l){ alert("Please enter your first and last name."); return; }
+      Assignment.init(asg);
+      Assignment.setStudent(f,l);
+      document.getElementById("asgNamePrompt").classList.add("hide");
+      if(asg.paths.length > 1) showPathPicker(asg);
+      else { Assignment.setPath(0); startStudentSession(asg); }
+    });
+  }
+}
+
+function showPathPicker(asg){
+  const card = document.getElementById("asgPathPicker");
+  const list = document.getElementById("asgPathList");
+  list.innerHTML = asg.paths.map((p,i)=>{
+    const settings = [];
+    if(p.instrument) settings.push(INSTRUMENTS[p.instrument]?.name);
+    if(p.diff) settings.push(p.diff);
+    if(p.mode) settings.push(p.mode);
+    if(p.clef) settings.push(p.clef+" clef");
+    const goalsHtml = p.goals.map(g=>`<span class="pill">${goalLabel(g)}</span>`).join("");
+    return `<div class="stats-cell" style="grid-column:1/-1;cursor:pointer" data-pi="${i}">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <div>
+          <div class="k">Option ${i+1}</div>
+          <div style="font-weight:600;font-size:15px">${escapeHtml(p.name||'Path '+(i+1))}</div>
+          <div class="small muted" style="margin-top:2px">${settings.join(' · ') || 'Pick your own settings'}</div>
+        </div>
+        <button class="btn" style="max-width:120px">Choose</button>
+      </div>
+      <div style="margin-top:8px">${goalsHtml}</div>
+    </div>`;
+  }).join("");
+  card.classList.remove("hide");
+  list.querySelectorAll("[data-pi]").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const i = +el.dataset.pi;
+      Assignment.setPath(i);
+      card.classList.add("hide");
+      startStudentSession(asg);
+    });
+  });
+}
+
+function showCompletedView(prog, asg){
+  const r = Assignment.checkGoals();
+  Assignment.showCompletion(r);
+  const card = document.getElementById("asgCompletion");
+  const note = document.createElement("div");
+  note.className = "alert success";
+  note.style.marginTop = "10px";
+  note.innerHTML = `<b>You already completed this assignment.</b> Submission code is regenerated below.`;
+  card.querySelector("#asgCompletionBody").prepend(note);
+}
+
+function startStudentSession(asg){
+  // Re-parent the existing game shell into studentApp
+  const studentApp = document.getElementById("studentApp").querySelector(".app");
+  const setup = document.getElementById("setup");
+  const game = document.getElementById("game");
+  const results = document.getElementById("results");
+  if(setup.parentElement.id !== "studentInner"){
+    const inner = document.createElement("div"); inner.id = "studentInner";
+    studentApp.appendChild(inner);
+    inner.appendChild(setup); inner.appendChild(game); inner.appendChild(results);
+  }
+  document.getElementById("asgGoalsCard").classList.remove("hide");
+  const pathTxt = Assignment.currentPath() ? ` · ${Assignment.currentPath().name}` : "";
+  document.getElementById("asgWho").textContent = `${State.assignment.student.first} ${State.assignment.student.last}${pathTxt}`;
+  const due = asg.due ? "Due "+new Date(asg.due).toLocaleDateString() : "";
+  document.getElementById("asgDuePill").textContent = due;
+  Assignment.renderGoalsCard();
+
+  // Reset field locking state first
+  [elInst, elDiff, elMode, elClef].forEach(el=>{ el.disabled=false; });
+
+  // Lock per chosen path
+  const p = Assignment.currentPath();
+  if(p){
+    if(p.instrument){ elInst.value = p.instrument; refreshClefField(); elInst.disabled = true; }
+    if(p.diff){ elDiff.value = p.diff; elDiff.disabled = true; }
+    if(p.mode){ elMode.value = p.mode; elMode.disabled = true; }
+    if(p.clef && [...elClef.options].some(o=>o.value===p.clef)){ elClef.value = p.clef; elClef.disabled = true; }
+  }
+
+  const tabs = document.getElementById("menuTabs");
+  if(tabs) tabs.style.display = "none";
+  document.getElementById("tabStats")?.classList.add("hide");
+  document.getElementById("tabHelp")?.classList.add("hide");
+  document.getElementById("tabPlay")?.classList.remove("hide");
+  setup.classList.remove("hide");
+  game.classList.add("hide"); results.classList.add("hide");
+}
+
+function bootTeacher(){
+  showApp("teacher");
+  Teacher.init();
+}
+
+/* ------------------------------- Boot ------------------------------------- */
+const _params = new URLSearchParams(location.search);
+populateInstruments();
+applyTheme(0);
+populateStatsInst();
+updateProgressBox();
+
+if(_params.get("teachermode")==="true"){
+  bootTeacher();
+} else if(_params.get("assignment")){
+  bootStudent(_params.get("assignment"));
+} else {
+  showApp("game");
+}
+</script>
+</body>
+</html>
